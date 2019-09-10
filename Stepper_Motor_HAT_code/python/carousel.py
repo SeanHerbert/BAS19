@@ -21,13 +21,13 @@ class carousel:
         self.motor.TurnStep(Dir='forward', steps=320, stepdelay = 0.000001)
         self.steps += 320
         self.curPos+=1
-        self.curPos = self.curPos % 20
+        self.curPos = (self.curPos % 20) +1
         self.steps = self.steps%6400
     def prevSlide(self):
         self.motor.TurnStep(Dir='backward', steps=320, stepdelay = 0.000001)
         self.steps -= 320
         self.curPos-=1
-        self.curPos = self.curPos % 20
+        self.curPos = (self.curPos % 20) + 1
         self.steps = self.steps%6400
     def zeroPos(self):
         self.curPos = 1
