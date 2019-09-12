@@ -1,7 +1,5 @@
-
-from openpyxl import Workbook
-from openpyxl import load_workbook
-import os
+import subprocess
+from xlwt import Workbook
 
 
 class Utility:
@@ -11,17 +9,13 @@ class Utility:
     def setPathology(self, min, max):
         self.minPathology = min
         self.maxPathology = max
-    def dataEnter(self):
+    def dataEnter(self,fname ="ex.xls"):
+        self.fname= fname
         self.wb = Workbook()
-        self.ws = self.wb.active
-        self.ws.title = 'newFile'
-        self.filename = 'newFile.xlsx'
-        self.df = 'DataFiles\\'
-        self.path = self.df + self.filename
-        self.wb.save(self.path)
-        os.startfile(self.path)
-
-
+        self.s1 = self.wb.add_sheet("Sheet1")
+        self.wb.save(self.fname)
+        subprocess.Popen(['xdg-open',self.fname])
+        
 
     
     
