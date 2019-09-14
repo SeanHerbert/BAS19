@@ -6,13 +6,13 @@ class Illuminator(): # Define our class
         self.setBrightness(bright)
         self.da = data
         self.ck = clock
-        
+        self.on = 0
         io.setmode(io.BCM)
         io.setup(self.ck,io.OUT)
         io.setup(self.da,io.OUT)
         io.output(self.ck, io.HIGH)
         io.output(self.da, io.HIGH)
-        self.led = self.br<<24 
+        self.led = (self.br<<24)|(255<<16)|(255<<8)|255 
      
     def setBrightness(self,brightness):
         if brightness > 31:
@@ -21,12 +21,15 @@ class Illuminator(): # Define our class
             brightness = 0
         self.br = brightness | 0xE0
 
-    def on(self,col):
-        
-            self.led = (self.br<<24)|(col[2]<<16)|(col[1]<<8)|col[0]
-            self.show()
+    def turnOn(self):
+        self.on = 1
+        self.show()
      
-    
+    def changeColor(self,col):
+        self.led=((self.br<<24)|(col[0]<<16)|(col[2]<<8)|col[1])
+        if(self.on):
+            self.show()
+        
  
     def show(self):
         io.output(self.da,io.LOW)
@@ -47,7 +50,8 @@ class Illuminator(): # Define our class
         for i in range(0,33): # send footer
             io.output(self.ck, io.LOW)
             io.output(self.ck, io.HIGH)
-    def off(self):
+    def turnOff(self):
+        self.on =0
         self.led = (self.br<<24)|(0<<16)|(0<<8)|0
         self.show()
         
