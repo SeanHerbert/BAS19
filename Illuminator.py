@@ -12,7 +12,7 @@ class Illuminator(): # Define our class
         io.setup(self.da,io.OUT)
         io.output(self.ck, io.HIGH)
         io.output(self.da, io.HIGH)
-        self.led = (self.br<<24)|(255<<16)|(255<<8)|255 
+        self.prevConfig = (self.br<<24)|(255<<16)|(255<<8)|255 
      
     def setBrightness(self,brightness):
         if brightness > 31:
@@ -23,10 +23,11 @@ class Illuminator(): # Define our class
 
     def turnOn(self):
         self.on = 1
+        self.led = self.prevConfig
         self.show()
      
-    def changeColor(self,col):
-        self.led=((self.br<<24)|(col[0]<<16)|(col[2]<<8)|col[1])
+    def changeColor(self,red,green,blue):
+        self.led=((self.br<<24)|(red<<16)|(blue<<8)|green)
         if(self.on):
             self.show()
         
@@ -52,6 +53,7 @@ class Illuminator(): # Define our class
             io.output(self.ck, io.HIGH)
     def turnOff(self):
         self.on =0
+        self.prevConfig = self.led
         self.led = (self.br<<24)|(0<<16)|(0<<8)|0
         self.show()
         
