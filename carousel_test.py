@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import time
-from DRV8825_scratch import DRV8825
-from Carousel import Carousel
+from DRV8825 import DRV8825
+from carousel import carousel
 
 
 try:
@@ -17,7 +17,7 @@ try:
         #Motor1.Stop()
 #        c=carousel()
 #        c.moveToSlide(15)
-       c = Carousel()
+       c = carousel()
        for x in range(0,5):
            c.stepForward()
            time.sleep(.5)

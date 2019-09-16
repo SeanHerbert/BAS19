@@ -2,4 +2,4 @@
 from Utility import Utility
 
 u =Utility()
-u.dataEnter("dataFile.xls")
+u.dataEnter("file1.xls")
