@@ -6,7 +6,7 @@ import sys
 from scipy import spatial 
 from iou import iou
 image1 = cv2.imread(r"C:\Users\Sean Herbert\Desktop\Fall2019\Senior project\BAS19\Images\10x Slide 520030747 second spot in-focus height 84um.tif", 1)
-image2 = cv2.imread(r"C:\Users\Sean Herbert\Desktop\Fall2019\Senior project\BAS19\Images\10x Slide 520030747 third spot in-focus height 84um.tif", 1)
+image2 = cv2.imread(r"C:\Users\Sean Herbert\Desktop\Fall2019\Senior project\BAS19\Images\i13\10x Slide 520030747 third spot in-focus height 84um.tif", 1)
 
 image3 = cv2.imread(r"C:\Users\Sean Herbert\Desktop\Fall2019\Senior project\Blood Cell Images from Roche/10x-Slide-520030762-in-focus-height-64um.tif", 1)
 
