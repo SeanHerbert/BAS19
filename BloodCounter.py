@@ -4,11 +4,10 @@ from scipy import spatial
 from iou import iou
 
 class BloodCounter():
-    def __init__(self,slideImage):
-        self.slideImage = cv2.imread(slideImage,1)
-        self.wbc_cnt = self.countWBC()
-        self.rbc_cnt = self.countRBC()
-        self.ratio= self.wbc_cnt/(self.rbc_cnt - self.wbc_cnt) 
+    def __init__(self):
+        self.wbc_cnt = 0;
+        self.rbc_cnt = 0;
+        self.ratio= 0; 
 
     def removeSmallRegion(self,image):
         _,binary = cv2.threshold(image,100,255, cv2.THRESH_BINARY)
@@ -21,15 +20,11 @@ class BloodCounter():
 
         return image
 
-    def countWBC(self):
-
-     
-        image_hsv = cv2.cvtColor(self.slideImage, cv2.COLOR_BGR2HSV)
-
+    def countWBC(self,slideImage):
+        slideImage = cv2.imread(slideImage,1)
+        image_hsv = cv2.cvtColor(slideImage, cv2.COLOR_BGR2HSV)
         image_s_channel = image_hsv[:,:,1]
-     
         cell_image = image_s_channel;
-
         cell_data = cell_image.reshape((-1, 1))
         cell_data = np.float32(cell_data)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 0.1)
@@ -86,19 +81,25 @@ class BloodCounter():
              record.append(tl)
              tl_.append(tl)
              br_.append(br)
+        self.wbc_cnt = cell_num;
+        return self.wbc_cnt
 
-        return cell_num
-
-    def countRBC(self):
+    def countRBC(self,slideImage):
         
-        output = self.slideImage.copy()
-        gray = cv2.cvtColor(self.slideImage, cv2.COLOR_BGR2GRAY)
+        slideImage = cv2.imread(slideImage,1)
+        gray = cv2.cvtColor(slideImage, cv2.COLOR_BGR2GRAY)
         
 
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2.8, 13, param1 = 60, param2 = 32, minRadius = 6, maxRadius = 10)
 
         detected_circles = np.uint16(np.around(circles))
-        return detected_circles.shape[1]
+        self.rbc_cnt = detected_circles.shape[1];
+        return self.rbc_cnt
+    def calcRatio(self):
+        self.ratio = self.wbc_cnt/(self.rbc_cnt - self.wbc_cnt)
+        self.ratio ="{0:.5f}".format(self.ratio)
+        return self.ratio
+        
      
         
 
