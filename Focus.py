@@ -48,6 +48,8 @@ class Focus():
             v = self.varianceofLap(imageGray)
             print("Variance at folder {} is {}".format(p,v))
             if(loop ==3):
+                #For now, just return image from folder (will be from camera)
+                return image
                 break
             
             if(v>lt):
