@@ -13,7 +13,7 @@ class Automatic():
         self.fileHandler = FileHandler(self)
         
     def start(self):
-        for i in range(3):
+        for i in range(20):
             #auto focus
             bestImage = self.focus.autoFocus()
             #analyze image

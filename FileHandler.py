@@ -20,11 +20,11 @@ class FileHandler():
         path = self.system.directory+fname
         self.system.dataFilePaths.append(path)
         wb = Workbook()
-        self. ws1 = wb.active
-        self.ws1.title = "bloodcount"
-        self.writeBoilerPlate(self.ws1)
-        self.reSizeCells(self.ws1)
-        self.centerText(self.ws1)
+        ws1 = wb.active
+        ws1.title = "bloodcount"
+        self.writeBoilerPlate(ws1)
+        self.reSizeCells(ws1)
+        self.centerText(ws1)
         wb.save(path)
         self.system.currFileIndex += 1
     def openCurrentDataFile(self):
@@ -40,12 +40,15 @@ class FileHandler():
     def writeRatio(self,index,ratio):
         if(len(self.system.dataFilePaths)>0):
             wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
-            self.ws1.cell(row=index+2, column=6).value= ratio
+            ws1 = wb.active
+            ws1.cell(row=index+2, column=6, value= ratio)
 
         else:
             self.createNewDataFile()
             wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
-            self.ws1.cell(row=index+2, column=6).value= ratio
+            ws1 = wb.active
+            ws1.cell(row=index+2, column=6, value= ratio)
+        wb.save(self.system.dataFilePaths[self.system.currFileIndex])
         
             
     def reSizeCells(self, ws1):
