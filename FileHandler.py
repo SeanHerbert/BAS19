@@ -1,5 +1,7 @@
 import subprocess
 from openpyxl import Workbook
+from openpyxl import load_workbook
+
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment
 import os.path 
@@ -12,22 +14,21 @@ class FileHandler():
     #     self.system.dataFilePaths=usedIn.dataFilePaths
     #     self.system.currFileIndex = usedIn.currFileIndex
     def createNewDataFile(self):
-            now = datetime.now()
-            dt_string = now.strftime("%d-%m-%Y:%H:%M:%S")
-            fname= "bloodcount_"+dt_string+".xlsx"
-            path = self.system.directory+fname
-            self.system.dataFilePaths.append(path)
-            wb = Workbook()
-            ws1 = wb.active
-            ws1.title = "bloodcount"
-            self.writeBoilerPlate(ws1)
-            self.reSizeCells(ws1)
-            self.centerText(ws1)
-            wb.save(path)
-            subprocess.Popen(['xdg-open',path])
-            self.system.currFileIndex += 1
+        now = datetime.now()
+        dt_string = now.strftime("%d-%m-%Y:%H:%M:%S")
+        fname= "bloodcount_"+dt_string+".xlsx"
+        path = self.system.directory+fname
+        self.system.dataFilePaths.append(path)
+        wb = Workbook()
+        self. ws1 = wb.active
+        self.ws1.title = "bloodcount"
+        self.writeBoilerPlate(self.ws1)
+        self.reSizeCells(self.ws1)
+        self.centerText(self.ws1)
+        wb.save(path)
+        self.system.currFileIndex += 1
     def openCurrentDataFile(self):
-        if(len(self.system.dataFilePaths)>0):
+        if(len(self.system.dataFilePaths)>=0):
             subprocess.Popen(['xdg-open',self.system.dataFilePaths[self.system.currFileIndex]])
     def writeBoilerPlate(self,ws1):
         header = [u'Slide Position', u'Sample ID', u'Sample Date',
@@ -36,6 +37,17 @@ class FileHandler():
         ws1.append(header)
         for i in range (1,21):
             ws1.cell(row=i+1, column=1, value=i)
+    def writeRatio(self,index,ratio):
+        if(len(self.system.dataFilePaths)>0):
+            wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
+            self.ws1.cell(row=index+2, column=6).value= ratio
+
+        else:
+            self.createNewDataFile()
+            wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
+            self.ws1.cell(row=index+2, column=6).value= ratio
+        
+            
     def reSizeCells(self, ws1):
         column_widths = []
         for row in ws1.rows:

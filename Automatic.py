@@ -1,6 +1,8 @@
 from carousel import carousel
 from Focus import Focus
 from BloodCounter import BloodCounter
+from FileHandler import FileHandler
+
 
 class Automatic():
     def __init__(self,system):
@@ -8,9 +10,10 @@ class Automatic():
         self.carousel = carousel()
         self.focus = Focus()
         self.bloodCounter = BloodCounter()
+        self.fileHandler = FileHandler(self)
         
     def start(self):
-        for i in range(20):
+        for i in range(3):
             #auto focus
             bestImage = self.focus.autoFocus()
             #analyze image
@@ -23,7 +26,11 @@ class Automatic():
             print("rbc's is ", self.bloodCounter.rbc_cnt)
             #pass bloodCounter.ratio to GUI
             print("ratio is ", self.bloodCounter.ratio)
+            self.fileHandler.writeRatio(i, self.bloodCounter.ratio)
             self.carousel.nextSlide()
+    
+        
+        
         
         
     

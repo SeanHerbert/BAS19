@@ -8,5 +8,5 @@ class System():
         
         self.util = Utility(self)
 
-        self.auto =Automatic(self)
+        self.auto = Automatic(self)
    

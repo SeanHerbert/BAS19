@@ -3,9 +3,8 @@ import time
 
 
 sys = System()
-sys.util.createNewDataFile()
-print(sys.currFileIndex)
-time.sleep(10)
-sys.util.openCurrentDataFile()
+# sys.util.createFile()
+# print(sys.currFileIndex)
+# time.sleep(10)
+# sys.util.openCurrFile()
 sys.auto.start()
-# s.util.dataEnter()
