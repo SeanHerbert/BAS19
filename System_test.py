@@ -1,4 +1,11 @@
 from System import System
+import time
 
-s = System()
-s.util.dataEnter()
+
+sys = System()
+sys.util.createNewDataFile()
+print(sys.currFileIndex)
+time.sleep(10)
+sys.util.openCurrentDataFile()
+sys.auto.start()
+# s.util.dataEnter()

@@ -3,7 +3,8 @@ from Focus import Focus
 from BloodCounter import BloodCounter
 
 class Automatic():
-    def __init__(self):
+    def __init__(self,system):
+        self.system = system
         self.carousel = carousel()
         self.focus = Focus()
         self.bloodCounter = BloodCounter()

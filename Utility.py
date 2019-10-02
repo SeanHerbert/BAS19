@@ -6,21 +6,24 @@ import os.path
 from datetime import datetime
 
 class Utility:
-    def __init__(self):
+    def __init__(self,system):
+        self.system = system
         self.minPathology = 0
         self.maxPathology = 0
-        self.directory ="/home/pi/BAS/DataFiles/"
-        self.paths =[]
-        self.cnt = -1
     def setPathology(self, min, max):
         self.minPathology = min
         self.maxPathology = max
+    def pathologyWarn(self, bloodRatio):
+        if((bloodRatio<self.minPathology) or (bloodRatio>self.maxPathology)):
+            return True
+        else:
+            return False
     def createNewDataFile(self):
         now = datetime.now()
         dt_string = now.strftime("%d-%m-%Y:%H:%M:%S")
         fname= "bloodcount_"+dt_string+".xlsx"
-        path = self.directory+fname
-        self.paths.append(path)
+        path = self.system.directory+fname
+        self.system.dataFilePaths.append(path)
         wb = Workbook()
         ws1 = wb.active
         ws1.title = "bloodcount"
@@ -29,10 +32,10 @@ class Utility:
         self.centerText(ws1)
         wb.save(path)
         subprocess.Popen(['xdg-open',path])
-        self.cnt = self.cnt + 1
+        self.system.currFileIndex += 1
     def openCurrentDataFile(self):
-        if(len(self.paths)>0):
-            subprocess.Popen(['xdg-open',self.paths[self.cnt]])
+        if(len(self.system.dataFilePaths)>0):
+            subprocess.Popen(['xdg-open',self.system.dataFilePaths[self.system.currFileIndex]])
     def writeBoilerPlate(self,ws1):
         header = [u'Slide Position', u'Sample ID', u'Sample Date',
                     u'Analysis Date',u'Analysis Time',
