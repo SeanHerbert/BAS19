@@ -21,7 +21,7 @@ class BloodCounter():
         return image
 
     def countWBC(self,slideImage):
-        slideImage = cv2.imread(slideImage,1)
+#         slideImage = cv2.imread(slideImage,1)
         image_hsv = cv2.cvtColor(slideImage, cv2.COLOR_BGR2HSV)
         image_s_channel = image_hsv[:,:,1]
         cell_image = image_s_channel;
@@ -86,7 +86,7 @@ class BloodCounter():
 
     def countRBC(self,slideImage):
         
-        slideImage = cv2.imread(slideImage,1)
+#         slideImage = cv2.imread(slideImage,1)
         gray = cv2.cvtColor(slideImage, cv2.COLOR_BGR2GRAY)
         
 

@@ -9,7 +9,10 @@ from datetime import datetime
 
 class FileHandler():
     def __init__(self,usedIn):
-        self.system = usedIn.system
+        if(str(type(usedIn))!="<class 'System.System'>"):
+            self.system = usedIn.system
+        else:
+            self.system = usedIn
     #     self.system.directory = usedIn.directory
     #     self.system.dataFilePaths=usedIn.dataFilePaths
     #     self.system.currFileIndex = usedIn.currFileIndex
@@ -28,7 +31,7 @@ class FileHandler():
         wb.save(path)
         self.system.currFileIndex += 1
     def openCurrentDataFile(self):
-        if(len(self.system.dataFilePaths)>=0):
+        if(len(self.system.dataFilePaths)>0):
             subprocess.Popen(['xdg-open',self.system.dataFilePaths[self.system.currFileIndex]])
     def writeBoilerPlate(self,ws1):
         header = [u'Slide Position', u'Sample ID', u'Sample Date',
@@ -49,7 +52,6 @@ class FileHandler():
             ws1 = wb.active
             ws1.cell(row=index+2, column=6, value= ratio)
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
-        
             
     def reSizeCells(self, ws1):
         column_widths = []
