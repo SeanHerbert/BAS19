@@ -24,12 +24,15 @@ class Illuminator(): # Define our class
     def turnOn(self):
         self.on = 1
         self.led = self.prevConfig
+        print(str(self.led))
         self.show()
      
     def changeColor(self,red,green,blue):
         self.led=((self.br<<24)|(red<<16)|(blue<<8)|green)
         if(self.on):
             self.show()
+        else:
+            self.prevConfig = self.led
         
  
     def show(self):
