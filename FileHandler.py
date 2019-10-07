@@ -52,7 +52,11 @@ class FileHandler():
             ws1 = wb.active
             ws1.cell(row=index+2, column=6, value= ratio)
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
-            
+    def readSampleID(self):
+        wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
+        ws1 = wb.active
+        sampleID = ws1.cell(row=2,column = self.system.carousel.curPos-1 )
+        
     def reSizeCells(self, ws1):
         column_widths = []
         for row in ws1.rows:
