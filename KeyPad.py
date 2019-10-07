@@ -115,12 +115,19 @@ class KeyPad(Frame):
         self.txt_prompt.config(state=NORMAL)
         self.txt_prompt.insert(END, self.current_digit)
         
-   #kills window and inserts entered text into the widget that called from 
+   #kills window and inserts entered text into the widget that called from, also validates and bounds input
     def enter(self):
-        input = int(self.txt_prompt.get("1.0",END))
+        input = float(self.txt_prompt.get("1.0",END))
         if "labelframe7" in str(self.caller):
+            input = int(input)
             if(input>255):
                 input = 255
+        if "labelframe8" in str(self.caller):
+            input = int(input)
+            if(input>20):
+                input=20
+            if(input<1):
+                input =1
         self.caller.config(state=NORMAL)
         self.caller.delete("1.0", "end")
         self.caller.insert(END,input)
