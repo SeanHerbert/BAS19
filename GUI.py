@@ -26,6 +26,8 @@ from BloodCounter import BloodCounter
 from tkinter import *
 from PIL import ImageTk, Image
 from KeyPad import KeyPad
+from datetime import datetime
+
 # 
 
    
@@ -93,11 +95,18 @@ class Toplevel1:
         self.system.util.setPathology(self.minPathologyText.get("1.0",END),self.maxPathologyText.get("1.0",END))
     
     def autoStart(self):
-        self.system.auto.start()
+        self.system.control.combine()
+    def eStop(self):
+        self.system.control.stop()
       
     def ledPower(self):
+        
+            
         if(self.ledPowerCnt % 2 == 0):
             self.system.illuminator.turnOn()
+            if(self.ledPowerCnt==0):
+                self.system.illuminator.turnOff()
+                self.system.illuminator.turnOn()
         else:
             self.system.illuminator.turnOff()
         self.ledPowerCnt +=1
@@ -116,6 +125,8 @@ class Toplevel1:
         
     def goToSlide(self):
         self.system.carousel.moveToSlide(int(self.goToSlideText.get("1.0",END)))
+        self.sampleIdText.delete("1.0","end")
+        self.sampleIdText.insert(END,self.system.fileHandler.readSampleID())
     
     def genKeyPad(self,event):
         if(self.kpRunning==0):
@@ -126,6 +137,8 @@ class Toplevel1:
             
             kp = KeyPad(r,self,caller)
             kp.grid()
+#     def genKeyPadXl(self):
+        
             
 
  
@@ -144,7 +157,7 @@ class Toplevel1:
         font20 = "-family {Segoe UI} -size 20 -slant roman "  \
             "-underline 0 -overstrike 0"
 
-        top.geometry("1920x1060+386+327")
+        top.geometry("1920x1060+-1+0")
         top.title("Blood Analyzer")
         top.configure(background="#d9d9d9")
         
@@ -536,6 +549,7 @@ class Toplevel1:
         self.emergencyStopButton.configure(highlightcolor="black")
         self.emergencyStopButton.configure(pady="0")
         self.emergencyStopButton.configure(text='''Emergency stop''')
+        self.emergencyStopButton.configure(command=lambda : self.eStop())
 
         self.illuminatorFrame = tk.LabelFrame(top)
         self.illuminatorFrame.place(relx=0.006, rely=0.159, relheight=0.483
@@ -793,6 +807,14 @@ class Toplevel1:
         self.sampleDateText.configure(selectbackground="#c4c4c4")
         self.sampleDateText.configure(selectforeground="black")
         self.sampleDateText.configure(wrap="word")
+        now = datetime.now()
+        dt_string = now.strftime("%d/%m/%Y")
+        temp= dt_string.split('/')
+        temp[0] = temp[0][1:]
+        temp[2] = temp[2][2:]
+        print(temp)
+        dt_string="{}/{}/{}".format(temp[0],temp[1],temp[2])
+        self.sampleDateText.insert(END,dt_string)
 
         self.sampleRatioText = tk.Text(self.sampleParamsFrame)
         self.sampleRatioText.place(relx=0.062, rely=0.523, relheight=0.157

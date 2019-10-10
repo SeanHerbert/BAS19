@@ -40,7 +40,7 @@ class Focus():
         lt = 0
         p=0 # used for indexing thru roche images (for testing only)
     
-        while(1):
+        while(1 and (not self.system.control.stop_threads.is_set())):
             p+=1 # index thru folders of Roche images
             for (dirpath, dirnames, ifn) in walk('/home/pi/BAS/Images/i'+str(p)):
                 f=ifn
@@ -51,7 +51,13 @@ class Focus():
             if(loop ==3):
                 #For now, just return image from folder (will be from camera)
                 self.system.currImage = image
+#                 cv2.imshow("window", image)
+#                 cv2.waitKey(0)
+#                 cv2.destroyAllWindows()
+                #comment out the next line(used for testing consistency of wbc count with "good" slide image)
+                image = cv2.imread("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif")
                 return image
+            
                 break
             
             if(v>lt):
@@ -63,6 +69,8 @@ class Focus():
                 self.jogUp()
                 p-=2 # used to simulate grabbing the previous image (one jog up)
                 loop +=1
+                
+        return -1
                 
                     
                 
