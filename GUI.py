@@ -909,10 +909,10 @@ class Toplevel1:
         self.imageFrame.configure(highlightbackground="#d9d9d9")
         self.imageFrame.configure(highlightcolor="black")
 
-        size = 1975.68,833.49
-        self.path = "/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif"
-        img = Image.open(self.path)
-        img.thumbnail(size, Image.ANTIALIAS)
+#         size = 1975.68,833.49
+#         self.path = "/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif"
+#         img = Image.open(self.path)
+#         img.thumbnail(size, Image.ANTIALIAS)
         
         self.img = ImageTk.PhotoImage(Image.open("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif"))
 #         self.img = ImageTk.PhotoImage(img)

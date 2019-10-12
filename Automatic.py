@@ -44,12 +44,12 @@ class Automatic():
             self.system.GUI.sampleBloodCountText.insert(END,"{}/{}".format(x,y))
             self.system.GUI.sampleRatioText.delete("1.0", "end")
             if(float(z)>float(self.system.util.maxPathology) or float(z) <float(self.system.util.minPathology)):
-                self.sampleRatioText.configure(highlightbackground="red")
-                self.sampleRatioText.configure(highlightthickness=4)
+                self.system.GUI.sampleRatioText.configure(highlightbackground="red")
+                self.system.GUI.sampleRatioText.configure(highlightthickness=4)
             else:
                 self.sampleRatioText.configure(highlightthickness=0)
                 
-            self.system.GUI.sampleRatioText.insert(END,"{}+{}".format(z,self.system.carousel.curPos))
+            self.system.GUI.sampleRatioText.insert(END,"{}".format(z))
             self.system.GUI.sampleIdText.delete("1.0", "end")
 #             self.system.GUI.sampleIdText.insert(END,"{}".format(self.system.carousel.curPos))
             self.system.carousel.nextSlide()
