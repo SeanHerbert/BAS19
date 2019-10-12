@@ -169,6 +169,7 @@ class BloodCounter():
             return -1
         self.ratio = self.wbc_cnt/(self.rbc_cnt - self.wbc_cnt)
         self.ratio ="{0:.5f}".format(self.ratio)
+        self.ratio = float(self.ratio)
         return self.ratio
         
      

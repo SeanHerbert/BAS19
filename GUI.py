@@ -37,20 +37,20 @@ def vp_start_gui():
     GUI_support.init(root, top)
     root.mainloop()
 
-# w = None
-# def create_Toplevel1(root, *args, **kwargs):
-#     '''Starting point when module is imported by another program.'''
-#     global w, w_win, rt
-#     rt = root
-#     w = tk.Toplevel (root)
-#     top = Toplevel1 (w)
-#     BASGUI_support.init(w, top, *args, **kwargs)
-#     return (w, top)
-# 
-# def destroy_Toplevel1():
-#     global w
-#     w.destroy()
-#     w = None
+w = None
+def create_Toplevel1(root, *args, **kwargs):
+    '''Starting point when module is imported by another program.'''
+    global w, w_win, rt
+    rt = root
+    w = tk.Toplevel (root)
+    top = Toplevel1 (w)
+    BASGUI_support.init(w, top, *args, **kwargs)
+    return (w, top)
+
+def destroy_Toplevel1():
+    global w
+    w.destroy()
+    w = None
 
 class Toplevel1:
      
@@ -75,7 +75,7 @@ class Toplevel1:
         self.sampleBloodCountText.insert(END,"{}/{}".format(self.system.man.bloodData[0], self.system.man.bloodData[1]))
         self.sampleRatioText.delete("1.0", "end")
         self.sampleRatioText.insert(END,self.system.bloodCounter.ratio)
-        if(self.system.bloodCounter.ratio>self.system.util.maxPathology or self.system.bloodCounter.ratio <self.system.util.minPathology):
+        if(float(self.system.bloodCounter.ratio)>float(self.system.util.maxPathology) or float(self.system.bloodCounter.ratio) <float(self.system.util.minPathology)):
             self.sampleRatioText.configure(highlightbackground="red")
             self.sampleRatioText.configure(highlightthickness=4)
             
@@ -93,6 +93,7 @@ class Toplevel1:
         self.system.util.setPathology(self.minPathologyText.get("1.0",END),self.maxPathologyText.get("1.0",END))
     
     def autoStart(self):
+        self.sampleRatioText.configure(highlightthickness=0)
         self.system.control.combine()
     def eStop(self):
         self.system.control.stop()
@@ -124,7 +125,8 @@ class Toplevel1:
     def goToSlide(self):
         self.system.carousel.moveToSlide(int(self.goToSlideText.get("1.0",END)))
         self.sampleIdText.delete("1.0","end")
-        self.sampleIdText.insert(END,self.system.fileHandler.readSampleID())
+        if(self.system.fileHandler.readSampleID()!= None):
+            self.sampleIdText.insert(END,self.system.fileHandler.readSampleID())
     
     def genKeyPad(self,event):
         if(self.kpRunning==0):
@@ -530,7 +532,7 @@ class Toplevel1:
         self.autoStartButton.configure(highlightcolor="black")
         self.autoStartButton.configure(pady="0")
         self.autoStartButton.configure(text='''Start''')
-        self.autoStartButton.configure(command=lambda : self.autoStart())
+        self.autoStartButton.configure(command= self.autoStart)
         self.autoStartButton.configure(font=font20)
 
 
@@ -765,7 +767,7 @@ class Toplevel1:
         self.goToSlideButton.configure(highlightcolor="black")
         self.goToSlideButton.configure(pady="0")
         self.goToSlideButton.configure(text='''Go to Slide''')
-        self.goToSlideButton.configure(command=lambda : self.goToSlide())
+        self.goToSlideButton.configure(command= self.goToSlide)
         self.goToSlideButton.configure(font=font20)
 
         self.sampleParamsFrame = tk.LabelFrame(top)

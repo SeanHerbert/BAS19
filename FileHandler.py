@@ -2,7 +2,6 @@ import subprocess
 from openpyxl import Workbook
 from openpyxl import load_workbook
 
-from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment
 import os #was os.path 
 from datetime import datetime
@@ -18,9 +17,7 @@ class FileHandler():
             self.system = usedIn.system
         else:
             self.system = usedIn
-    #     self.system.directory = usedIn.directory
-    #     self.system.dataFilePaths=usedIn.dataFilePaths
-    #     self.system.currFileIndex = usedIn.currFileIndex
+
     def createNewDataFile(self):
         now = datetime.now()
         dt_string = now.strftime("%d-%m-%Y:%H:%M:%S")
@@ -31,6 +28,7 @@ class FileHandler():
         ws1 = wb.active
         ws1.title = "bloodcount"
         self.writeBoilerPlate(ws1)
+        
         self.reSizeCells(ws1)
         self.centerText(ws1)
         ws1.sheet_view.zoomScale = 225
@@ -75,20 +73,20 @@ class FileHandler():
             ws1 = wb.active
             sampleID = ws1.cell(row=self.system.carousel.curPos+1 ,column = 2).value
             print("current Carousel Position is: ",self.system.carousel.curPos )
+            print(type(sampleID))
             return sampleID
+        else:
+            return None
         
     def reSizeCells(self, ws1):
-        column_widths = []
-        for row in ws1.rows:
-            for i, cell in enumerate(row):
-                if len(column_widths) > i:
-                    if len(str(cell.value)) > column_widths[i]:
-                        column_widths[i] = len(str(cell.value))
-                else:
-                    column_widths += [len(str(cell.value))]
+        ws1.column_dimensions['A'].width= 15
+        ws1.column_dimensions['B'].width= 10
+        ws1.column_dimensions['C'].width= 12
+        ws1.column_dimensions['D'].width= 14
+        ws1.column_dimensions['E'].width= 14
+        ws1.column_dimensions['F'].width= 14
+        ws1.column_dimensions['G'].width= 10
 
-        for i, column_width in enumerate(column_widths):
-            ws1.column_dimensions[get_column_letter(i+1)].width= column_width+1
     def centerText(self,ws1):
         for col in ws1.columns:
             for cell in col:
