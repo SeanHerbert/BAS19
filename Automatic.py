@@ -35,7 +35,7 @@ class Automatic():
             z = self.system.bloodCounter.calcRatio()
             if(self.system.control.stop_threads.is_set()):
                 break    
-            self.fileHandler.writeRatio(i, z)
+            self.fileHandler.writeRatio(self.system.control.wb,self.system.control.ws1,i, z)
 #             t.start()
             
     #             time.sleep(1)
@@ -53,7 +53,7 @@ class Automatic():
             self.system.GUI.sampleIdText.delete("1.0", "end")
 #             self.system.GUI.sampleIdText.insert(END,"{}".format(self.system.carousel.curPos))
             self.system.carousel.nextSlide()
-#             time.sleep(1)
+            print("===============================SLIDE {} COMPLETE========================".format(i))
         return 'done'
 
     

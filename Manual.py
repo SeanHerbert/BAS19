@@ -1,4 +1,6 @@
 from FileHandler import FileHandler
+from openpyxl import Workbook
+from openpyxl import load_workbook
     
 class Manual():
     
@@ -14,7 +16,12 @@ class Manual():
         self.bloodData = [wbc,rbc,ratio]
         return self.bloodData
     def saveData(self):
-        self.fileHandler.writeRatio((self.system.carousel.curPos+1),self.bloodData[2])
+        if(len(self.system.dataFilePaths)==0):
+            self.system.util.createFile()
+
+        self.wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
+        self.ws1 = self.wb.active
+        self.fileHandler.writeRatio(self.wb,self.ws1,(self.system.carousel.curPos),self.bloodData[2])
     def captureImage(self):
         print("Image Captured")
         #will call Camera API here

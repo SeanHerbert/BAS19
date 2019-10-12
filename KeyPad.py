@@ -124,10 +124,10 @@ class KeyPad(Frame):
                 input = 255
         if "labelframe8" in str(self.caller):
             input = int(input)
-            if(input>20):
-                input=20
-            if(input<1):
-                input =1
+            if(input>19):
+                input=19
+            if(input<0):
+                input =0
         self.caller.config(state=NORMAL)
         self.caller.delete("1.0", "end")
         self.caller.insert(END,input)

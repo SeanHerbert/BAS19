@@ -1,4 +1,6 @@
 from threading import Thread,Event
+from openpyxl import Workbook
+from openpyxl import load_workbook
 
 class Controller(object):
     def __init__(self,system):
@@ -11,8 +13,8 @@ class Controller(object):
         
         while not self.stop_threads.is_set():
             x = self.system.auto.start()
-#             if x=='done':
-#                 self.stop()
+            if x=='done':
+                break
         self.stop_threads.clear()
         
             
@@ -23,6 +25,8 @@ class Controller(object):
     def combine(self):
         if(len(self.system.dataFilePaths)==0):
             self.system.util.createFile()
+        self.wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
+        self.ws1 = self.wb.active
         self.stop_threads.clear()
         self.thread1 = Thread(target = self.loop1)
 #         self.thread2 = Thread(target = self.loop2)

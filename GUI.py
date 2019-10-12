@@ -124,6 +124,7 @@ class Toplevel1:
     def goToSlide(self):
         self.system.carousel.moveToSlide(int(self.goToSlideText.get("1.0",END)))
         self.sampleIdText.delete("1.0","end")
+        print("the curPos is {}".format(self.system.carousel.curPos))
         if(self.system.fileHandler.readSampleID()!= None):
             self.sampleIdText.insert(END,self.system.fileHandler.readSampleID())
     

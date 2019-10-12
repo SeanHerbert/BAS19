@@ -57,17 +57,8 @@ class FileHandler():
         ws1.append(header)
         for i in range (1,21):
             ws1.cell(row=i+1, column=1, value=i)
-    def writeRatio(self,index,ratio):
-        if(len(self.system.dataFilePaths)>0):
-            wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
-            ws1 = wb.active
-            ws1.cell(row=index+2, column=6, value= ratio)
-
-        else:
-            self.createNewDataFile()
-            wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
-            ws1 = wb.active
-            ws1.cell(row=index+2, column=6, value= ratio)
+    def writeRatio(self,wb,ws1,index,ratio):
+        ws1.cell(row=index+2, column=6, value= ratio)
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
     def readSampleID(self):
         if(len(self.system.dataFilePaths)>0):
