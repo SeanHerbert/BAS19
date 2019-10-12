@@ -70,14 +70,13 @@ class Toplevel1:
         self.focusPosText.insert(END,self.system.focus.zVar())
     
     def countBlood(self):
+        self.sampleRatioText.configure(highlightthickness=0)
         self.system.man.countBlood()
         self.sampleBloodCountText.delete("1.0", "end")
         self.sampleBloodCountText.insert(END,"{}/{}".format(self.system.man.bloodData[0], self.system.man.bloodData[1]))
         self.sampleRatioText.delete("1.0", "end")
         self.sampleRatioText.insert(END,self.system.bloodCounter.ratio)
-        if(float(self.system.bloodCounter.ratio)>float(self.system.util.maxPathology) or float(self.system.bloodCounter.ratio) <float(self.system.util.minPathology)):
-            self.sampleRatioText.configure(highlightbackground="red")
-            self.sampleRatioText.configure(highlightthickness=4)
+        
             
     
     def saveData(self):
@@ -549,7 +548,7 @@ class Toplevel1:
         self.emergencyStopButton.configure(highlightcolor="black")
         self.emergencyStopButton.configure(pady="0")
         self.emergencyStopButton.configure(text='''Emergency stop''')
-        self.emergencyStopButton.configure(command=lambda : self.eStop())
+        self.emergencyStopButton.configure(command= self.eStop)
 
         self.illuminatorFrame = tk.LabelFrame(top)
         self.illuminatorFrame.place(relx=0.006, rely=0.159, relheight=0.483
@@ -576,7 +575,7 @@ class Toplevel1:
         self.ledPowerButton.configure(highlightcolor="black")
         self.ledPowerButton.configure(pady="0")
         self.ledPowerButton.configure(text='''Power''')
-        self.ledPowerButton.configure(command=lambda : self.ledPower())
+        self.ledPowerButton.configure(command= self.ledPower)
         self.ledPowerButton.configure(font=font20)
 
 
@@ -634,7 +633,7 @@ class Toplevel1:
         self.ledSetButton.configure(highlightcolor="black")
         self.ledSetButton.configure(pady="0")
         self.ledSetButton.configure(text='''Set''')
-        self.ledSetButton.configure(command=lambda : self.setLed())
+        self.ledSetButton.configure(command= self.setLed)
         self.ledSetButton.configure(font=font20)
 
 
@@ -705,7 +704,7 @@ class Toplevel1:
         self.minusStepCarouselButton.configure(highlightcolor="black")
         self.minusStepCarouselButton.configure(pady="0")
         self.minusStepCarouselButton.configure(text='''Step(-)''')
-        self.minusStepCarouselButton.configure(command=lambda : self.cwStep())
+        self.minusStepCarouselButton.configure(command= self.cwStep)
         self.minusStepCarouselButton.configure(font=font20)
 
         self.plusStepCarouselButton = tk.Button(self.carouselFrame)
@@ -720,7 +719,7 @@ class Toplevel1:
         self.plusStepCarouselButton.configure(highlightcolor="black")
         self.plusStepCarouselButton.configure(pady="0")
         self.plusStepCarouselButton.configure(text='''Step(+)''')
-        self.plusStepCarouselButton.configure(command=lambda : self.ccwStep())
+        self.plusStepCarouselButton.configure(command= self.ccwStep)
         self.plusStepCarouselButton.configure(font=font20)
 
 
@@ -736,7 +735,7 @@ class Toplevel1:
         self.zeroCarouselButton.configure(highlightcolor="#ffffff")
         self.zeroCarouselButton.configure(pady="0")
         self.zeroCarouselButton.configure(text='''Zero''')
-        self.zeroCarouselButton.configure(command=lambda : self.zeroCarousel())
+        self.zeroCarouselButton.configure(command= self.zeroCarousel)
         self.zeroCarouselButton.configure(font=font20)
 
 
@@ -810,7 +809,8 @@ class Toplevel1:
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y")
         temp= dt_string.split('/')
-        temp[0] = temp[0][1:]
+        if(temp[0][0]=='0'):
+            temp[0] = temp[0][1:]
         temp[2] = temp[2][2:]
         print(temp)
         dt_string="{}/{}/{}".format(temp[0],temp[1],temp[2])

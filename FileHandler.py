@@ -8,6 +8,8 @@ from datetime import datetime
 import time
 from DataFileControl import DataFileControl
 from tkinter import *
+import matplotlib
+matplotlib.use('TkAgg')
 
 
 

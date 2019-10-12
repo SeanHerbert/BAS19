@@ -170,6 +170,9 @@ class BloodCounter():
         self.ratio = self.wbc_cnt/(self.rbc_cnt - self.wbc_cnt)
         self.ratio ="{0:.5f}".format(self.ratio)
         self.ratio = float(self.ratio)
+        if(float(self.ratio)>float(self.system.util.maxPathology) or float(self.ratio) <float(self.system.util.minPathology)):
+            self.system.GUI.sampleRatioText.configure(highlightbackground="red")
+            self.system.GUI.sampleRatioText.configure(highlightthickness=4)
         return self.ratio
         
      

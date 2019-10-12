@@ -24,7 +24,7 @@ class System():
         self.bloodCounter = BloodCounter(self)
         self.util = Utility(self)
         self.auto = Automatic(self)
-        self.control = Controller(self.auto)
+        self.control = Controller(self)
         self.man = Manual(self)
     
     
