@@ -75,6 +75,10 @@ class Toplevel1:
         self.sampleBloodCountText.insert(END,"{}/{}".format(self.system.man.bloodData[0], self.system.man.bloodData[1]))
         self.sampleRatioText.delete("1.0", "end")
         self.sampleRatioText.insert(END,self.system.bloodCounter.ratio)
+        if(self.system.bloodCounter.ratio>self.system.util.maxPathology or self.system.bloodCounter.ratio <self.system.util.minPathology):
+            self.sampleRatioText.configure(highlightbackground="red")
+            self.sampleRatioText.configure(highlightthickness=4)
+            
     
     def saveData(self):
         self.system.man.saveData()
@@ -418,7 +422,7 @@ class Toplevel1:
         self.createFileButton.configure(highlightcolor="black")
         self.createFileButton.configure(pady="0")
         self.createFileButton.configure(text='''Create file''')
-        self.createFileButton.configure(command=lambda : self.createFile())
+        self.createFileButton.configure(command= self.createFile)
         self.createFileButton.configure(font=font20)
 
 
@@ -434,7 +438,7 @@ class Toplevel1:
         self.openFileButton.configure(highlightcolor="black")
         self.openFileButton.configure(pady="0")
         self.openFileButton.configure(text='''Open file''')
-        self.openFileButton.configure(command=lambda : self.openFile())
+        self.openFileButton.configure(command = self.openFile)
         self.openFileButton.configure(font=font20)
 
         self.setPathologyButton = tk.Button(self.utilityFrame)
@@ -449,7 +453,7 @@ class Toplevel1:
         self.setPathologyButton.configure(highlightcolor="black")
         self.setPathologyButton.configure(pady="0")
         self.setPathologyButton.configure(text='''Set pathology''')
-        self.setPathologyButton.configure(command=lambda : self.setPathology())
+        self.setPathologyButton.configure(command = self.setPathology)
         self.setPathologyButton.configure(font=font20)
 
         self.minPathologyText = tk.Text(self.utilityFrame)
@@ -822,6 +826,9 @@ class Toplevel1:
         self.sampleRatioText.configure(selectbackground="#c4c4c4")
         self.sampleRatioText.configure(selectforeground="black")
         self.sampleRatioText.configure(wrap="word")
+        
+
+
 
         self.sampleIdLabel = tk.Label(self.sampleParamsFrame)
         self.sampleIdLabel.place(relx=0.45, rely=0.171, height=24, width=140
