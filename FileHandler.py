@@ -4,8 +4,13 @@ from openpyxl import load_workbook
 
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment
-import os.path 
+import os #was os.path 
 from datetime import datetime
+import time
+from DataFileControl import DataFileControl
+from tkinter import *
+
+
 
 class FileHandler():
     def __init__(self,usedIn):
@@ -28,11 +33,23 @@ class FileHandler():
         self.writeBoilerPlate(ws1)
         self.reSizeCells(ws1)
         self.centerText(ws1)
+        ws1.sheet_view.zoomScale = 225
         wb.save(path)
         self.system.currFileIndex += 1
     def openCurrentDataFile(self):
         if(len(self.system.dataFilePaths)>0):
-            subprocess.Popen(['xdg-open',self.system.dataFilePaths[self.system.currFileIndex]])
+            subprocess.Popen(['xdg-open', self.system.dataFilePaths[self.system.currFileIndex]])
+            
+            time.sleep(2)
+            r = Tk()
+            r.geometry("400x150+1520+0")
+            r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the keypad on top
+            r.title("Save/Close")
+            
+            dfc = DataFileControl(r,self.system)
+            dfc.grid()
+            
+
     def writeBoilerPlate(self,ws1):
         header = [u'Slide Position', u'Sample ID', u'Sample Date',
                     u'Analysis Date',u'Analysis Time',
@@ -53,9 +70,12 @@ class FileHandler():
             ws1.cell(row=index+2, column=6, value= ratio)
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
     def readSampleID(self):
-        wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
-        ws1 = wb.active
-        sampleID = ws1.cell(row=2,column = self.system.carousel.curPos-1 )
+        if(len(self.system.dataFilePaths)>0):
+            wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
+            ws1 = wb.active
+            sampleID = ws1.cell(row=self.system.carousel.curPos+1 ,column = 2).value
+            print("current Carousel Position is: ",self.system.carousel.curPos )
+            return sampleID
         
     def reSizeCells(self, ws1):
         column_widths = []

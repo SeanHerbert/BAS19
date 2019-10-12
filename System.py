@@ -5,7 +5,6 @@ from carousel import carousel
 from Illuminator import Illuminator
 from BloodCounter import BloodCounter
 from Manual import Manual
-from tkinter import BOTH, END, LEFT
 from FileHandler import FileHandler
 from Controller import Controller
 

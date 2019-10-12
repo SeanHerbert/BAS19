@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 from scipy import spatial 
 from iou import iou
-import random
 
 class BloodCounter():
     def __init__(self,system):
