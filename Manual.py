@@ -10,11 +10,14 @@ class Manual():
         self.bloodData = []
     
     def countBlood(self):
-        rbc = self.system.bloodCounter.countRBC(self.system.currImage)
-        wbc = self.system.bloodCounter.countWBC(self.system.currImage)
-        ratio = self.system.bloodCounter.calcRatio()
-        self.bloodData = [wbc,rbc,ratio]
-        return self.bloodData
+        try:
+            rbc = self.system.bloodCounter.countRBC(self.system.currImage)
+            wbc = self.system.bloodCounter.countWBC(self.system.currImage)
+            ratio = self.system.bloodCounter.calcRatio()
+            self.bloodData = [wbc,rbc,ratio]
+            return self.bloodData
+        except:
+            return None
     def saveData(self):
         if(len(self.system.dataFilePaths)==0):
             self.system.util.createFile()

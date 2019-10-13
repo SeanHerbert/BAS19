@@ -70,12 +70,14 @@ class Toplevel1:
         self.focusPosText.insert(END,self.system.focus.zVar())
     
     def countBlood(self):
+        self.sampleRatioText.configure(highlightbackground="#c4c4c4")
         self.sampleRatioText.configure(highlightthickness=0)
-        self.system.man.countBlood()
-        self.sampleBloodCountText.delete("1.0", "end")
-        self.sampleBloodCountText.insert(END,"{}/{}".format(self.system.man.bloodData[0], self.system.man.bloodData[1]))
-        self.sampleRatioText.delete("1.0", "end")
-        self.sampleRatioText.insert(END,self.system.bloodCounter.ratio)
+        #check to see if count Blood could successfully analyze the sample before writing to the GUI
+        if(self.system.man.countBlood() != None):
+            self.sampleBloodCountText.delete("1.0", "end")
+            self.sampleBloodCountText.insert(END,"{}/{}".format(self.system.man.bloodData[0], self.system.man.bloodData[1]))
+            self.sampleRatioText.delete("1.0", "end")
+            self.sampleRatioText.insert(END,self.system.bloodCounter.ratio)
         
             
     
