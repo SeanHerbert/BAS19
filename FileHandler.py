@@ -55,8 +55,8 @@ class FileHandler():
                     u'Analysis Date',u'Analysis Time',
                     u'WBC/RBC Ratio', u'Pathology']
         ws1.append(header)
-        for i in range (1,21):
-            ws1.cell(row=i+1, column=1, value=i)
+        for i in range (20):
+            ws1.cell(row=i+2, column=1, value=i)
     def writeRatio(self,wb,ws1,index,ratio):
         ws1.cell(row=index+2, column=6, value= ratio)
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
