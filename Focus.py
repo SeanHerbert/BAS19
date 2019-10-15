@@ -1,7 +1,7 @@
 import cv2
 from DRV8825 import DRV8825
-from imutils import paths
-from PIL import Image
+# from imutils import paths
+# from PIL import Image
 from os import walk
 
 
@@ -17,7 +17,7 @@ class Focus():
 
     def goToMax(self):
         #moveToMax pos
-        #for testing without limit switches, we assuming it takes 200 steps 
+        #for testing without limit switches, we assuming it takes 2 steps(to preserve time) 
         #the for loop will be replaced with the following while loop
         #while(!self.isAtTop()):
         for i in range(2):
@@ -40,7 +40,7 @@ class Focus():
     
         while(1 and (not self.system.control.stop_threads.is_set())):
             p+=1 # index thru folders of Roche images
-            for (dirpath, dirnames, ifn) in walk('/home/pi/BAS/Images/i'+str(p)):
+            for (_, _, ifn) in walk('/home/pi/BAS/Images/i'+str(p)):
                 f=ifn
             image = cv2.imread('/home/pi/BAS/Images/i'+str(p)+'/'+str(f[0])) #for test: image grabbed from roche images(will be from camera)
             imageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

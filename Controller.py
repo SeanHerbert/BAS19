@@ -1,5 +1,4 @@
 from threading import Thread,Event
-from openpyxl import Workbook
 from openpyxl import load_workbook
 
 class Controller(object):

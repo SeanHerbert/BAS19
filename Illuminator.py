@@ -51,7 +51,7 @@ class Illuminator(): # Define our class
                 d = d << 1
                 io.output(self.ck, io.HIGH)
         io.output(self.da, io.LOW)
-        for i in range(0,33): # send footer
+        for k in range(0,33): # send footer
             io.output(self.ck, io.LOW)
             io.output(self.ck, io.HIGH)
     def turnOff(self):

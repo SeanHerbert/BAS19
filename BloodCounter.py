@@ -22,7 +22,7 @@ class BloodCounter():
 
         if (self.system.control.stop_threads.is_set()):
             return -1
-        contours, hierarch = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours,_ = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for i in range(len(contours)):
             if (self.system.control.stop_threads.is_set()):
                 return -1
@@ -50,7 +50,7 @@ class BloodCounter():
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 0.1)
         if (self.system.control.stop_threads.is_set()):
             return -1
-        cell_ret,cell_label,cell_center=cv2.kmeans(cell_data,3,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
+        _,cell_label,cell_center=cv2.kmeans(cell_data,3,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
         cell_center = np.uint8(cell_center)
         cell_res = cell_center[cell_label.flatten()]
         cell = cell_res.reshape((cell_image.shape))
@@ -71,7 +71,7 @@ class BloodCounter():
 
         if (self.system.control.stop_threads.is_set()):
             return -1
-        cnts,hierarchy = cv2.findContours(processed_cell, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts,_ = cv2.findContours(processed_cell, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cell_num = len(cnts)
         #get rid of these after testing
         print("There are {} wbc's before remove double".format(cell_num))

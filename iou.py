@@ -27,5 +27,5 @@ def iou(r,R,x1,y1,x2,y2):
     if(interArea < 0):
         interArea=0
     
-    iou = (interArea/ float(bigCircleArea+smallCircleArea-interArea))
-    return iou
+    iou_val = (interArea/ float(bigCircleArea+smallCircleArea-interArea))
+    return iou_val
