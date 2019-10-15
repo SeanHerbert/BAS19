@@ -12,7 +12,6 @@ from Controller import Controller
 class System():
     def __init__(self,GUI):
         self.GUI = GUI
-        
         self.directory ="/home/pi/BAS/DataFiles/"
         self.dataFilePaths =[]
         self.currFileIndex = -1
