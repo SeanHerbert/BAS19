@@ -34,8 +34,11 @@ class Controller(object):
 #         self.thread2.start()
 
     def stop(self):
-        self.stop_threads.set()
-        self.thread1.join()
-#         self.thread2.join()
-        self.thread1 = None
+        try:
+            self.stop_threads.set()
+            self.thread1.join()
+    #         self.thread2.join()
+            self.thread1 = None
 #         self.thread2 = None
+        except:
+            print("error: either autostart hasn't been pressed or automatic thread could not be stopped")
