@@ -1,5 +1,4 @@
 from FileHandler import FileHandler
-from openpyxl import Workbook
 from openpyxl import load_workbook
     
 class Manual():
@@ -18,6 +17,7 @@ class Manual():
             return self.bloodData
         except:
             return None
+    
     def saveData(self):
         if(len(self.system.dataFilePaths)==0 and len(self.bloodData) == 3): #if file no exist and blood data exist, create new file
             self.system.util.createFile()
@@ -29,7 +29,6 @@ class Manual():
             self.fileHandler.writeDateTime(self.wb,self.ws1,(self.system.carousel.curPos))
         except:
             print("Could not load_workbook or write to file")
-            return None
 
     def captureImage(self):
         print("Image Captured")
