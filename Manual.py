@@ -19,13 +19,17 @@ class Manual():
         except:
             return None
     def saveData(self):
-        if(len(self.system.dataFilePaths)==0):
+        if(len(self.system.dataFilePaths)==0 and len(self.bloodData) == 3): #if file no exist and blood data exist, create new file
             self.system.util.createFile()
-
-        self.wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
-        self.ws1 = self.wb.active
-        self.fileHandler.writeRatio(self.wb,self.ws1,(self.system.carousel.curPos),self.bloodData[2])
-        self.fileHandler.writeDateTime(self.wb,self.ws1,(self.system.carousel.curPos))
+        
+        try:
+            self.wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
+            self.ws1 = self.wb.active
+            self.fileHandler.writeRatio(self.wb,self.ws1,(self.system.carousel.curPos),self.bloodData[2])
+            self.fileHandler.writeDateTime(self.wb,self.ws1,(self.system.carousel.curPos))
+        except:
+            print("Could not load_workbook or write to file")
+            return None
 
     def captureImage(self):
         print("Image Captured")
