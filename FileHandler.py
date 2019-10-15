@@ -63,21 +63,51 @@ class FileHandler():
         print("~~~~~~~~~~~~~~~~~~Ratio written~~~~~~~~~~~~~~~~")
 
     def readSampleID(self):
-        if(len(self.system.dataFilePaths)>0):
+#         if(len(self.system.dataFilePaths)>0):
+        try:
             wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
             ws1 = wb.active
-            sampleID = ws1.cell(row=self.system.carousel.curPos+1 ,column = 2).value
+            sampleID = ws1.cell(row=self.system.carousel.curPos+2 ,column = 2).value
+            print("SampleID is",sampleID)
             print("current Carousel Position is: ",self.system.carousel.curPos )
             print(type(sampleID))
             return sampleID
-        else:
+        except:
+            print("Error could not read sampleID")
             return None
+    def readSampleDate(self):
+        #assuming only two date formats entered: mm/dd/yyyy or mm-dd-yyyy
+        try:
+            wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
+            ws1 = wb.active
+            temp = ws1.cell(row=self.system.carousel.curPos+2 ,column = 3).value
+            if(':' in str(temp)):
+                temp = str(temp).split(' ')
+                temp = temp[0]
+                temp = temp.split('-')
+                if(temp[1][0]=='0'):
+                    temp[1] = temp[1][1:]
+                if(temp[2][0]=='0'):
+                    temp[2] = temp[2][1:]
+                temp[0] = temp[0][2:]
+                sampleDate="{}/{}/{}".format(temp[1],temp[2],temp[0])
+            else:
+                temp = str(temp).split('-')
+                sampleDate="{}/{}/{}".format(temp[0],temp[1],temp[2])
+                
+            return sampleDate
+        except:
+            print("Error could not read sampleDate")
+            return None
+        
     def writeDateTime(self,wb,ws1,index):
         now_date = datetime.now()
         temp = now_date.strftime("%d/%m/%Y")
         temp= temp.split('/')
         if(temp[0][0]=='0'):
             temp[0] = temp[0][1:]
+        if(temp[1][0]=='0'):
+            temp[1] = temp[1][1:]
         temp[2] = temp[2][2:]
         currDate="{}/{}/{}".format(temp[0],temp[1],temp[2])
         

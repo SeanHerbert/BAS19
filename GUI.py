@@ -865,10 +865,16 @@ class GUI:
         
     def goToSlide(self):
         self.system.carousel.moveToSlide(int(self.goToSlideText.get("1.0",tk.END)))
-        self.sampleIdText.delete("1.0","end")
+        
         print("the curPos is {}".format(self.system.carousel.curPos))
-        if(self.system.fileHandler.readSampleID()!= None):
+#         if(self.system.fileHandler.readSampleID()!= None):
+        try:
+            self.sampleIdText.delete("1.0","end")
+            self.sampleDateText.delete("1.0","end")
             self.sampleIdText.insert(tk.END,self.system.fileHandler.readSampleID())
+            self.sampleDateText.insert(tk.END,self.system.fileHandler.readSampleDate())
+        except:
+            print("Error: could not insert sampleID or sampleDate to GUI")
     
     def genKeyPad(self,event):
         if(self.kpRunning==0):
