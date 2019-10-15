@@ -6,4 +6,5 @@ from imutils import paths
 from Focus import Focus
 
 f = Focus()
+f.autoFocus()
 

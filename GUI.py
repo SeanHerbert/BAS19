@@ -9,7 +9,7 @@ class GUI:
      
     def __init__(self):
         '''This class configures and populates the toplevel window.
-           top is the toplevel containing window.'''
+           self.root is the toplevel containing window.'''
         _bgcolor = '#d9d9d9'  # X11 color: 'gray85'
         _fgcolor = '#000000'  # X11 color: 'black'
         _compcolor = '#d9d9d9' # X11 color: 'gray85'

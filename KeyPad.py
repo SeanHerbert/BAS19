@@ -65,7 +65,7 @@ class KeyPad(Frame):
         self.btn_five.grid(row=2, column=1, sticky=W + E)
         self.btn_five.configure(width = 10)
         self.btn_five.configure(height = 5)
-        self.btn_six = Button(self, text="5", font=self.FONT,
+        self.btn_six = Button(self, text="6", font=self.FONT,
                               command=lambda: self.digit("5"))
         self.btn_six.grid(row=2, column=2, sticky=W + E)
         self.btn_six.configure(width = 10)

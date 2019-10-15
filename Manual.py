@@ -10,9 +10,9 @@ class Manual():
         self.bloodData = []
     
     def countBlood(self):
-        try:
-            rbc = self.system.bloodCounter.countRBC(self.system.currImage)
+        try: #switched order to RBC counted first
             wbc = self.system.bloodCounter.countWBC(self.system.currImage)
+            rbc = self.system.bloodCounter.countRBC(self.system.currImage)
             ratio = self.system.bloodCounter.calcRatio()
             self.bloodData = [wbc,rbc,ratio]
             return self.bloodData
@@ -25,6 +25,8 @@ class Manual():
         self.wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
         self.ws1 = self.wb.active
         self.fileHandler.writeRatio(self.wb,self.ws1,(self.system.carousel.curPos),self.bloodData[2])
+        self.fileHandler.writeDateTime(self.wb,self.ws1,(self.system.carousel.curPos))
+
     def captureImage(self):
         print("Image Captured")
         #will call Camera API here
