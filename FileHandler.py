@@ -60,6 +60,8 @@ class FileHandler():
     def writeRatio(self,wb,ws1,index,ratio):
         ws1.cell(row=index+2, column=6, value= ratio)
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
+        print("~~~~~~~~~~~~~~~~~~Ratio written~~~~~~~~~~~~~~~~")
+
     def readSampleID(self):
         if(len(self.system.dataFilePaths)>0):
             wb = load_workbook(self.system.dataFilePaths[self.system.currFileIndex])
@@ -70,6 +72,23 @@ class FileHandler():
             return sampleID
         else:
             return None
+    def writeDateTime(self,wb,ws1,index):
+        now_date = datetime.now()
+        temp = now_date.strftime("%d/%m/%Y")
+        temp= temp.split('/')
+        if(temp[0][0]=='0'):
+            temp[0] = temp[0][1:]
+        temp[2] = temp[2][2:]
+        date="{}/{}/{}".format(temp[0],temp[1],temp[2])
+        
+        now_time = str(now_date)
+        temp= now_time.split(' ')
+        temp = str(temp[1])
+        time = str(temp.split('.')[0])
+        print("~~~~~~~~~~~~~~~~~~{} {}~~~~~~~~~~~~~~~~".format(date,time))
+        ws1.cell(row=index+2, column=4, value= date)#date
+        ws1.cell(row=index+2, column=5, value= time)#time
+        print("~~~~~~~~~~~~~~~~~~DateTime written~~~~~~~~~~~~~~~~")
         
     def reSizeCells(self, ws1):
         ws1.column_dimensions['A'].width= 15

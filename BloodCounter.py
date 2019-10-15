@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from scipy import spatial 
 from iou import iou
+import random
 
 class BloodCounter():
     def __init__(self,system):
@@ -32,27 +33,13 @@ class BloodCounter():
         return image
 
     def countWBC(self,slideImage):
-#         cnts=0
-#         image_hsv=0
-#         image_s_channel=0
-#         cell_image=0
-#         cell_data=0
-#         criteria=0
-#         cell_ret=0
-#         cell_label=0
-#         cell_center=0
-#         cell_res=0
-#         cell=0
-#         max_v=0
-#         kernel_cell=0
-#         processed_cell=0
-#         hierarchy=0
-#         cell_num=0
-#         x=0
-#         y=0
-#         w=0
-#         h=0
-#         slideImage = cv2.imread(slideImage,1)
+        #remove pathology out of bounds red border at the beggining of each new analysis
+        xi=random.random()
+        cv2.imwrite("/home/pi/BAS/testingWBC/Before/___{}.tif".format(xi),slideImage)
+
+
+        self.system.GUI.removePathologyBorder()
+
         if (self.system.control.stop_threads.is_set()):
             return -1
         image_hsv = cv2.cvtColor(slideImage, cv2.COLOR_BGR2HSV)
@@ -88,15 +75,14 @@ class BloodCounter():
         cell_num = len(cnts)
         #get rid of these after testing
         print("There are {} wbc's before remove double".format(cell_num))
-#         color = (255, 0, 0)
-#         for i in range(cell_num):
-#             cnt = cnts[i]
-#             x, y, w, h = cv2.boundingRect(cnt)
-#             slideImage = cv2.rectangle(slideImage, (x, y), (x+w, y+h), color, 2)
+        color = (255, 0, 0)
+        for i in range(cell_num):
+            cnt = cnts[i]
+            x, y, w, h = cv2.boundingRect(cnt)
+            slideImage = cv2.rectangle(slideImage, (x, y), (x+w, y+h), color, 2)
 #             
 # #          cv2.namedWindow("output",cv2.WINDOW_NORMAL)
-#         xi=random.random()
-#         cv2.imwrite("{}___{}.tif".format(cell_num,xi),slideImage)
+        cv2.imwrite("/home/pi/BAS/testingWBC/After/___{}___{}.tif".format(cell_num,xi),slideImage)
 #         cv2.imwrite("/home/pi/BAS/testingWBC/processed_cell_for_{}___{}.tif".format(cell_num,xi),processed_cell)
 #         image = cv2.resize(slideImage, (1400, 770))   
 # 
@@ -170,9 +156,10 @@ class BloodCounter():
         self.ratio = self.wbc_cnt/(self.rbc_cnt - self.wbc_cnt)
         self.ratio ="{0:.5f}".format(self.ratio)
         self.ratio = float(self.ratio)
-        if(float(self.ratio)>float(self.system.util.maxPathology) or float(self.ratio) <float(self.system.util.minPathology)):
-            self.system.GUI.sampleRatioText.configure(highlightbackground="red")
-            self.system.GUI.sampleRatioText.configure(highlightthickness=4)
+        
+        if(self.ratio<self.system.util.minPathology or self.ratio >self.system.util.maxPathology):
+            self.system.GUI.addPathologyBorder()
+            
         return self.ratio
         
      

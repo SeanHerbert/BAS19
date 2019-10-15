@@ -1,4 +1,3 @@
-
 import cv2
 from DRV8825 import DRV8825
 from imutils import paths
@@ -7,6 +6,7 @@ from os import walk
 
 
 class Focus():
+    
     def __init__(self,system):
         self.motor = DRV8825(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20))
         self.curPos = self.goToMax()
@@ -52,11 +52,12 @@ class Focus():
 #                 cv2.imshow("window", image)
 #                 cv2.waitKey(0)
 #                 cv2.destroyAllWindows()
-                #comment out the next line(used for testing consistency of wbc count with "good" slide image)
+                #comment out the next 2 lines(used for testing consistency of wbc count with "good" slide image)
                 image = cv2.imread("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif")
+                self.system.currImage = image
                 return image
             
-                break
+    
             
             if(v>lt):
                 lt =v

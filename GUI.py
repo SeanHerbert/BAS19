@@ -1,152 +1,13 @@
-
-
-try:
-    import Tkinter as tk
-except ImportError:
-    import tkinter as tk
-
-try:
-    import ttk
-    py3 = False
-except ImportError:
-    import tkinter.ttk as ttk
-    py3 = True
-
-import GUI_support
-
+import tkinter as tk
 from System import System
-from Focus import Focus
-from BloodCounter import BloodCounter
-from tkinter import *
 from PIL import ImageTk, Image
 from KeyPad import KeyPad
 from datetime import datetime
 
-# 
 
-   
-
-
-
-
-def vp_start_gui():
-    '''Starting point when module is the main routine.'''
-    global val, w, root
-    root = tk.Tk()
-    top = Toplevel1 (root)
-    GUI_support.init(root, top)
-    root.mainloop()
-
-w = None
-def create_Toplevel1(root, *args, **kwargs):
-    '''Starting point when module is imported by another program.'''
-    global w, w_win, rt
-    rt = root
-    w = tk.Toplevel (root)
-    top = Toplevel1 (w)
-    BASGUI_support.init(w, top, *args, **kwargs)
-    return (w, top)
-
-def destroy_Toplevel1():
-    global w
-    w.destroy()
-    w = None
-
-class Toplevel1:
+class GUI:
      
-    def jogDwn(self):
-        self.system.focus.jogDown()
-        self.focusPosText.delete("1.0", "end")
-        self.focusPosText.insert(END,self.system.focus.zVar())
-       
-    def jogUp(self):
-        self.system.focus.jogUp()
-        self.focusPosText.delete("1.0", "end")
-        self.focusPosText.insert(END,self.system.focus.zVar())
-        
-    def autoFocus(self):
-        self.system.focus.autoFocus()
-        self.focusPosText.delete("1.0", "end")
-        self.focusPosText.insert(END,self.system.focus.zVar())
-    
-    def countBlood(self):
-        self.sampleRatioText.configure(highlightbackground="#c4c4c4")
-        self.sampleRatioText.configure(highlightthickness=0)
-        #check to see if count Blood could successfully analyze the sample before writing to the GUI
-        if(self.system.man.countBlood() != None):
-            self.sampleBloodCountText.delete("1.0", "end")
-            self.sampleBloodCountText.insert(END,"{}/{}".format(self.system.man.bloodData[0], self.system.man.bloodData[1]))
-            self.sampleRatioText.delete("1.0", "end")
-            self.sampleRatioText.insert(END,self.system.bloodCounter.ratio)
-        
-            
-    
-    def saveData(self):
-        self.system.man.saveData()
-   
-    def createFile(self):
-        self.system.util.createFile()
-    
-    def openFile(self):
-        self.system.util.openCurrFile()
-  
-    def setPathology(self):
-        self.system.util.setPathology(self.minPathologyText.get("1.0",END),self.maxPathologyText.get("1.0",END))
-    
-    def autoStart(self):
-        self.sampleRatioText.configure(highlightthickness=0)
-        self.system.control.combine()
-    def eStop(self):
-        self.system.control.stop()
-      
-    def ledPower(self):
-        
-            
-        if(self.ledPowerCnt % 2 == 0):
-            self.system.illuminator.turnOn()
-            if(self.ledPowerCnt==0):
-                self.system.illuminator.turnOff()
-                self.system.illuminator.turnOn()
-        else:
-            self.system.illuminator.turnOff()
-        self.ledPowerCnt +=1
-        
-    def setLed(self):
-        self.system.illuminator.changeColor(int(self.redLevelText.get("1.0",END)),int(self.greenLevelText.get("1.0",END)),int(self.blueLevelText.get("1.0",END)))
-        
-    def ccwStep(self):
-        self.system.carousel.stepForward()
-        
-    def cwStep(self):
-        self.system.carousel.stepBackward()
-        
-    def zeroCarousel(self):
-        self.system.carousel.zeroPos()
-        
-    def goToSlide(self):
-        self.system.carousel.moveToSlide(int(self.goToSlideText.get("1.0",END)))
-        self.sampleIdText.delete("1.0","end")
-        print("the curPos is {}".format(self.system.carousel.curPos))
-        if(self.system.fileHandler.readSampleID()!= None):
-            self.sampleIdText.insert(END,self.system.fileHandler.readSampleID())
-    
-    def genKeyPad(self,event):
-        if(self.kpRunning==0):
-            r = Tk()
-            r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the keypad on top
-            caller = event.widget
-            r.title("Keypad")
-            
-            kp = KeyPad(r,self,caller)
-            kp.grid()
-            
-        
-            
-
- 
-        
-        
-    def __init__(self, top=None):
+    def __init__(self):
         '''This class configures and populates the toplevel window.
            top is the toplevel containing window.'''
         _bgcolor = '#d9d9d9'  # X11 color: 'gray85'
@@ -158,14 +19,14 @@ class Toplevel1:
             "-underline 0 -overstrike 0"
         font20 = "-family {Segoe UI} -size 20 -slant roman "  \
             "-underline 0 -overstrike 0"
-
-        top.geometry("1920x1060+-1+0")
-        top.title("Blood Analyzer")
-        top.configure(background="#d9d9d9")
+        self.root = tk.Tk()
+        self.root.geometry("1920x1060+-1+0")
+        self.root.title("Blood Analyzer")
+        self.root.configure(background="#d9d9d9")
         
         self.ledPowerCnt = 0
         self.kpRunning = 0
-        self.healthStatusFrame = tk.LabelFrame(top)
+        self.healthStatusFrame = tk.LabelFrame(self.root)
         self.healthStatusFrame.place(relx=0.006, rely=0.0, relheight=0.16
                 , relwidth=0.192)
         self.healthStatusFrame.configure(relief='groove')
@@ -211,7 +72,7 @@ class Toplevel1:
         self.camTempLabel.configure(foreground="#000000")
         self.camTempLabel.configure(text='''Cam Temp (°C)''')
 
-        self.cameraFrame = tk.LabelFrame(top)
+        self.cameraFrame = tk.LabelFrame(self.root)
         self.cameraFrame.place(relx=0.202, rely=0.39, relheight=0.12
                 , relwidth=0.192)
         self.cameraFrame.configure(relief='groove')
@@ -237,7 +98,7 @@ class Toplevel1:
         self.camAdjustButton.configure(text='''Camera Adjust''')
         self.camAdjustButton.configure(font=font20)
 
-        self.focusFrame = tk.LabelFrame(top)
+        self.focusFrame = tk.LabelFrame(self.root)
         self.focusFrame.place(relx=0.202, rely=0.0, relheight=0.391
                 , relwidth=0.192)
         self.focusFrame.configure(relief='groove')
@@ -295,7 +156,7 @@ class Toplevel1:
         self.focusPosText.configure(selectbackground="#c4c4c4")
         self.focusPosText.configure(selectforeground="black")
         self.focusPosText.configure(wrap="word")
-        self.focusPosText.insert(END,"10000")
+        self.focusPosText.insert(tk.END,"10000")
 
         self.focusPosLabel = tk.Label(self.focusFrame)
         self.focusPosLabel.place(relx=0.352, rely=0.375, height=26, width=209
@@ -343,7 +204,7 @@ class Toplevel1:
         self.autoFocusButton.configure(font=font20)
 
 
-        self.manualFrame = tk.LabelFrame(top)
+        self.manualFrame = tk.LabelFrame(self.root)
         self.manualFrame.place(relx=0.396, rely=0.649, relheight=0.342
                 , relwidth=0.192)
         self.manualFrame.configure(relief='groove')
@@ -402,7 +263,7 @@ class Toplevel1:
         self.saveDataButton.configure(command = self.saveData)
         self.saveDataButton.configure(font=font20)
 
-        self.utilityFrame = tk.LabelFrame(top)
+        self.utilityFrame = tk.LabelFrame(self.root)
         self.utilityFrame.place(relx=0.202, rely=0.515, relheight=0.47
                 , relwidth=0.192)
         self.utilityFrame.configure(relief='groove')
@@ -510,7 +371,7 @@ class Toplevel1:
         self.maxPathologyLabel.configure(text='''Max''')
         self.maxPathologyLabel.configure(font=font20)
 
-        self.automaticFrame = tk.LabelFrame(top)
+        self.automaticFrame = tk.LabelFrame(self.root)
         self.automaticFrame.place(relx=0.592, rely=0.649, relheight=0.342
                 , relwidth=0.192)
         self.automaticFrame.configure(relief='groove')
@@ -553,7 +414,7 @@ class Toplevel1:
         self.emergencyStopButton.configure(text='''Emergency stop''')
         self.emergencyStopButton.configure(command= self.eStop)
 
-        self.illuminatorFrame = tk.LabelFrame(top)
+        self.illuminatorFrame = tk.LabelFrame(self.root)
         self.illuminatorFrame.place(relx=0.006, rely=0.159, relheight=0.483
                 , relwidth=0.192)
         self.illuminatorFrame.configure(relief='groove')
@@ -683,7 +544,7 @@ class Toplevel1:
         self.blueLevelLabel.configure(font=font20)
 
 
-        self.carouselFrame = tk.LabelFrame(top)
+        self.carouselFrame = tk.LabelFrame(self.root)
         self.carouselFrame.place(relx=0.006, rely=0.64, relheight=0.3452
                 , relwidth=0.192)
         self.carouselFrame.configure(relief='groove')
@@ -772,7 +633,7 @@ class Toplevel1:
         self.goToSlideButton.configure(command= self.goToSlide)
         self.goToSlideButton.configure(font=font20)
 
-        self.sampleParamsFrame = tk.LabelFrame(top)
+        self.sampleParamsFrame = tk.LabelFrame(self.root)
         self.sampleParamsFrame.place(relx=0.787, rely=0.649, relheight=0.342
                 , relwidth=0.208)
         self.sampleParamsFrame.configure(relief='groove')
@@ -817,7 +678,7 @@ class Toplevel1:
         temp[2] = temp[2][2:]
         print(temp)
         dt_string="{}/{}/{}".format(temp[0],temp[1],temp[2])
-        self.sampleDateText.insert(END,dt_string)
+        self.sampleDateText.insert(tk.END,dt_string)
 
         self.sampleRatioText = tk.Text(self.sampleParamsFrame)
         self.sampleRatioText.place(relx=0.062, rely=0.523, relheight=0.157
@@ -900,7 +761,7 @@ class Toplevel1:
         self.sampleBloodCountLabel.configure(text='''Counts''')
         self.sampleBloodCountLabel.configure(font=font20)
         
-        self.imageFrame = tk.LabelFrame(top)
+        self.imageFrame = tk.LabelFrame(self.root)
         self.imageFrame.place(relx=0.3969, rely=0.006, relheight=0.638
                 , relwidth=0.600)
         self.imageFrame.configure(relief='groove')
@@ -923,14 +784,118 @@ class Toplevel1:
         self.panel.pack()
         
         self.system = System(self)
+        
+    def jogDwn(self):
+        self.system.focus.jogDown()
+        self.focusPosText.delete("1.0", "end")
+        self.focusPosText.insert(tk.END,self.system.focus.zVar())
+       
+    def jogUp(self):
+        self.system.focus.jogUp()
+        self.focusPosText.delete("1.0", "end")
+        self.focusPosText.insert(tk.END,self.system.focus.zVar())
+        
+    def autoFocus(self):
+        self.system.focus.autoFocus()
+        self.focusPosText.delete("1.0", "end")
+        self.focusPosText.insert(tk.END,self.system.focus.zVar())
+    
+    def countBlood(self):
+        #check to see if count Blood could successfully analyze the sample before writing to the GUI
+        if(self.system.man.countBlood() != None):
+            self.sampleBloodCountText.delete("1.0", "end")
+            self.sampleBloodCountText.insert(tk.END,"{}/{}".format(self.system.man.bloodData[0], self.system.man.bloodData[1]))
+            self.sampleRatioText.delete("1.0", "end")
+            self.sampleRatioText.insert(tk.END,self.system.man.bloodData[2]) #changed to get ratio from man instead of directly from BloodCounter object
+    
+    #added next two functions to remove/add pathology border. root.update() forces the GUI to redraw (fixed issue of not remoiving border at new analysis)
+    def removePathologyBorder(self):
+        self.sampleRatioText.configure(highlightthickness=0)
+        self.root.update()
+        
+    
+    def addPathologyBorder(self):
+        self.system.GUI.sampleRatioText.configure(highlightbackground="red")
+        self.system.GUI.sampleRatioText.configure(highlightthickness=4)
+        self.root.update()
+            
+            
+    
+    def saveData(self):
+        self.system.man.saveData()
+   
+    def createFile(self):
+        self.system.util.createFile()
+    
+    def openFile(self):
+        self.system.util.openCurrFile()
+  
+    def setPathology(self):
+        self.system.util.setPathology(float(self.minPathologyText.get("1.0",tk.END)),float(self.maxPathologyText.get("1.0",tk.END)))
+    
+    def autoStart(self):
+        self.sampleRatioText.configure(highlightthickness=0)
+        self.system.control.combine()
+    def eStop(self):
+        self.system.control.stop()
+      
+    def ledPower(self):
+        
+            
+        if(self.ledPowerCnt % 2 == 0):
+            self.system.illuminator.turnOn()
+            if(self.ledPowerCnt==0):
+                self.system.illuminator.turnOff()
+                self.system.illuminator.turnOn()
+        else:
+            self.system.illuminator.turnOff()
+        self.ledPowerCnt +=1
+        
+    def setLed(self):
+        self.system.illuminator.changeColor(int(self.redLevelText.get("1.0",tk.END)),int(self.greenLevelText.get("1.0",tk.END)),int(self.blueLevelText.get("1.0",tk.END)))
+        
+    def ccwStep(self):
+        self.system.carousel.stepForward()
+        
+    def cwStep(self):
+        self.system.carousel.stepBackward()
+        
+    def zeroCarousel(self):
+        self.system.carousel.zeroPos()
+        
+    def goToSlide(self):
+        self.system.carousel.moveToSlide(int(self.goToSlideText.get("1.0",tk.END)))
+        self.sampleIdText.delete("1.0","end")
+        print("the curPos is {}".format(self.system.carousel.curPos))
+        if(self.system.fileHandler.readSampleID()!= None):
+            self.sampleIdText.insert(tk.END,self.system.fileHandler.readSampleID())
+    
+    def genKeyPad(self,event):
+        if(self.kpRunning==0):
+            r = tk.Tk()
+            r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the keypad on top
+            caller = event.widget
+            r.title("Keypad")
+            
+            kp = KeyPad(r,self,caller)
+            kp.grid()
+    def run(self):
+        self.root.mainloop()
+        
+app = GUI()
+app.run()
 
         
 
 
-if __name__ == '__main__':
-    vp_start_gui()
+        
+
+
+
     
     
+
+
 
 
 

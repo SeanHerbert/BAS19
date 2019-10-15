@@ -1,10 +1,5 @@
-from carousel import carousel
-from Focus import Focus
-from BloodCounter import BloodCounter
 from FileHandler import FileHandler
-from tkinter import BOTH, END, LEFT
-import time
-from threading import Thread
+from tkinter import END
 
 
 
@@ -36,22 +31,12 @@ class Automatic():
             if(self.system.control.stop_threads.is_set()):
                 break    
             self.fileHandler.writeRatio(self.system.control.wb,self.system.control.ws1,i, z)
-#             t.start()
-            
-    #             time.sleep(1)
+            self.fileHandler.writeDateTime(self.system.control.wb,self.system.control.ws1,i)
             self.system.GUI.sampleBloodCountText.delete("1.0", "end")
-            
             self.system.GUI.sampleBloodCountText.insert(END,"{}/{}".format(x,y))
-            self.system.GUI.sampleRatioText.delete("1.0", "end")
-            if(float(z)>float(self.system.util.maxPathology) or float(z) <float(self.system.util.minPathology)):
-                self.system.GUI.sampleRatioText.configure(highlightbackground="red")
-                self.system.GUI.sampleRatioText.configure(highlightthickness=4)
-            else:
-                self.sampleRatioText.configure(highlightthickness=0)
-                
+            self.system.GUI.sampleRatioText.delete("1.0", "end")    
             self.system.GUI.sampleRatioText.insert(END,"{}".format(z))
             self.system.GUI.sampleIdText.delete("1.0", "end")
-#             self.system.GUI.sampleIdText.insert(END,"{}".format(self.system.carousel.curPos))
             self.system.carousel.nextSlide()
             print("===============================SLIDE {} COMPLETE========================".format(i))
         return 'done'
