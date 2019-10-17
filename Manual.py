@@ -27,6 +27,9 @@ class Manual():
             self.ws1 = self.wb.active
             self.fileHandler.writeRatio(self.wb,self.ws1,(self.system.carousel.curPos),self.bloodData[2])
             self.fileHandler.writeDateTime(self.wb,self.ws1,(self.system.carousel.curPos))
+            pathFlag = self.system.util.pathologyWarn(self.bloodData[2])
+#             pathFlag = True
+            self.fileHandler.writePathology(self.wb,self.ws1,(self.system.carousel.curPos),pathFlag)
         except:
             print("Could not load_workbook or write to file")
 

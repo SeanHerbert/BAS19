@@ -27,18 +27,18 @@ class BloodCounter():
             if (self.system.control.stop_threads.is_set()):
                 return -1
             area = cv2.contourArea(contours[i])
-            if area < 80:
+            if area < 75:
                 cv2.drawContours(image,[contours[i]],0,0,-1)
 #         cv2.imwrite("/home/pi/BAS/testingWBC/processed_cell_for_{}.tif".format(j),image)
         return image
 
     def countWBC(self,slideImage):
         #remove pathology out of bounds red border at the beggining of each new analysis
-        xi=random.random()
-        cv2.imwrite("/home/pi/BAS/testingWBC/Before/___{}.tif".format(xi),slideImage)
+#         xi=random.random()
+#         cv2.imwrite("/home/pi/BAS/testingWBC/Before/___{}.tif".format(xi),slideImage)
 
 
-        self.system.GUI.removePathologyBorder()
+        self.system.GUI.removePathologyBorder() 
 
         if (self.system.control.stop_threads.is_set()):
             return -1
@@ -74,7 +74,7 @@ class BloodCounter():
         cnts,_ = cv2.findContours(processed_cell, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cell_num = len(cnts)
         #get rid of these after testing
-        print("There are {} wbc's before remove double".format(cell_num))
+#         print("There are {} wbc's before remove double".format(cell_num))
         color = (255, 0, 0)
         for i in range(cell_num):
             cnt = cnts[i]
@@ -82,7 +82,7 @@ class BloodCounter():
             slideImage = cv2.rectangle(slideImage, (x, y), (x+w, y+h), color, 2)
 #             
 # #          cv2.namedWindow("output",cv2.WINDOW_NORMAL)
-        cv2.imwrite("/home/pi/BAS/testingWBC/After/___{}___{}.tif".format(cell_num,xi),slideImage)
+#         cv2.imwrite("/home/pi/BAS/testingWBC/After/___{}___{}.tif".format(cell_num,xi),slideImage)
 #         cv2.imwrite("/home/pi/BAS/testingWBC/processed_cell_for_{}___{}.tif".format(cell_num,xi),processed_cell)
 #         image = cv2.resize(slideImage, (1400, 770))   
 # 
@@ -123,14 +123,14 @@ class BloodCounter():
                 iou_.append(iou_value)
             if iou_value > 0.02:
                 cell_num = cell_num -1
-                print("~~~~~~~~~~~~~~~~~~~~~~~REMOVED~~~~~~~~~~~~~~~~~~~")
+#                 print("~~~~~~~~~~~~~~~~~~~~~~~REMOVED~~~~~~~~~~~~~~~~~~~")
                 continue
                      
             record.append(tl)
             tl_.append(tl)
             br_.append(br)
         self.wbc_cnt = cell_num;
-        print("There are {} wbc's after remove double".format(cell_num))
+#         print("There are {} wbc's after remove double".format(cell_num))
         return self.wbc_cnt
 
     def countRBC(self,slideImage):
@@ -156,10 +156,7 @@ class BloodCounter():
         self.ratio = self.wbc_cnt/(self.rbc_cnt - self.wbc_cnt)
         self.ratio ="{0:.5f}".format(self.ratio)
         self.ratio = float(self.ratio)
-        
-        if(self.ratio<self.system.util.minPathology or self.ratio >self.system.util.maxPathology):
-            self.system.GUI.addPathologyBorder()
-            
+        self.system.GUI.addPathologyBorder(self.ratio)
         return self.ratio
         
      

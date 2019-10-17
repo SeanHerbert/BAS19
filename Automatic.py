@@ -32,6 +32,8 @@ class Automatic():
                 break    
             self.fileHandler.writeRatio(self.system.control.wb,self.system.control.ws1,i, z)
             self.fileHandler.writeDateTime(self.system.control.wb,self.system.control.ws1,i)
+            pathFlag = self.system.util.pathologyWarn(z)
+            self.fileHandler.writePathology(self.system.control.wb,self.system.control.ws1,i,z)
             self.system.GUI.sampleBloodCountText.delete("1.0", "end")
             self.system.GUI.sampleBloodCountText.insert(END,"{}/{}".format(x,y))
             self.system.GUI.sampleRatioText.delete("1.0", "end")    

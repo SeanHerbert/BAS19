@@ -19,7 +19,7 @@ bc = BloodCounter(system)
 image = cv2.imread("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif")
 for i in range(20):
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~~~~~~~~~~~~~~~~~~~~~~~~~".format(i))
-    bc.countWBC(image,i)
+    print(bc.countWBC(image))
 #     time.sleep(3)
 # bc1.countWBC(cv2.imread("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif"))
 # bc2.countWBC(cv2.imread("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif"))

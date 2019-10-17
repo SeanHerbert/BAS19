@@ -670,15 +670,15 @@ class GUI:
         self.sampleDateText.configure(selectbackground="#c4c4c4")
         self.sampleDateText.configure(selectforeground="black")
         self.sampleDateText.configure(wrap="word")
-        now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y")
-        temp= dt_string.split('/')
-        if(temp[0][0]=='0'):
-            temp[0] = temp[0][1:]
-        temp[2] = temp[2][2:]
-        print(temp)
-        dt_string="{}/{}/{}".format(temp[0],temp[1],temp[2])
-        self.sampleDateText.insert(tk.END,dt_string)
+#         now = datetime.now()
+#         dt_string = now.strftime("%d/%m/%Y")
+#         temp= dt_string.split('/')
+#         if(temp[0][0]=='0'):
+#             temp[0] = temp[0][1:]
+#         temp[2] = temp[2][2:]
+#         print(temp)
+#         dt_string="{}/{}/{}".format(temp[0],temp[1],temp[2])
+#         self.sampleDateText.insert(tk.END,dt_string)
 
         self.sampleRatioText = tk.Text(self.sampleParamsFrame)
         self.sampleRatioText.place(relx=0.062, rely=0.523, relheight=0.157
@@ -810,14 +810,18 @@ class GUI:
     
     #added next two functions to remove/add pathology border. root.update() forces the GUI to redraw (fixed issue of not remoiving border at new analysis)
     def removePathologyBorder(self):
+        self.sampleBloodCountText.delete("1.0", "end")
+        self.sampleRatioText.delete("1.0", "end")
         self.sampleRatioText.configure(highlightthickness=0)
         self.root.update()
         
     
-    def addPathologyBorder(self):
-        self.system.GUI.sampleRatioText.configure(highlightbackground="red")
-        self.system.GUI.sampleRatioText.configure(highlightthickness=4)
-        self.root.update()
+    def addPathologyBorder(self,ratio):
+        if(self.system.util.pathologyWarn(ratio)):
+            self.sampleRatioText.configure(highlightbackground="red")
+            self.sampleRatioText.configure(highlightthickness=4)
+            self.root.update()
+        
             
             
     
@@ -834,14 +838,15 @@ class GUI:
         self.system.util.setPathology(float(self.minPathologyText.get("1.0",tk.END)),float(self.maxPathologyText.get("1.0",tk.END)))
     
     def autoStart(self):
-        self.sampleRatioText.configure(highlightthickness=0)
+        self.sampleBloodCountText.delete("1.0", "end")
+        self.sampleRatioText.delete("1.0", "end")
+        self.removePathologyBorder()
         self.system.control.combine()
+    
     def eStop(self):
         self.system.control.stop()
       
     def ledPower(self):
-        
-            
         if(self.ledPowerCnt % 2 == 0):
             self.system.illuminator.turnOn()
             if(self.ledPowerCnt==0):
@@ -862,9 +867,20 @@ class GUI:
         
     def zeroCarousel(self):
         self.system.carousel.zeroPos()
+        try:
+            self.sampleIdText.delete("1.0","end")
+            self.sampleDateText.delete("1.0","end")
+            self.sampleIdText.insert(tk.END,self.system.fileHandler.readSampleID())
+            self.sampleDateText.insert(tk.END,self.system.fileHandler.readSampleDate())
+        except:
+            print("Error: could not insert sampleID or sampleDate to GUI")
         
     def goToSlide(self):
+        self.sampleBloodCountText.delete("1.0", "end")
+        self.sampleRatioText.delete("1.0", "end")
+        self.removePathologyBorder()
         self.system.carousel.moveToSlide(int(self.goToSlideText.get("1.0",tk.END)))
+        
         
         print("the curPos is {}".format(self.system.carousel.curPos))
 #         if(self.system.fileHandler.readSampleID()!= None):
@@ -885,6 +901,7 @@ class GUI:
             
             kp = KeyPad(r,self,caller)
             kp.grid()
+    
     def run(self):
         self.root.mainloop()
         

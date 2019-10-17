@@ -8,6 +8,8 @@ from datetime import datetime
 import time
 from DataFileControl import DataFileControl
 from tkinter import *
+from openpyxl.styles.borders import Border, Side
+
 import matplotlib
 matplotlib.use('TkAgg')
 
@@ -120,6 +122,21 @@ class FileHandler():
         ws1.cell(row=index+2, column=5, value= currTime)#time
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
         print("~~~~~~~~~~~~~~~~~~DateTime written~~~~~~~~~~~~~~~~")
+    def writePathology(self,wb,ws1,index,pathFlag):
+        thin_border = Border(left=Side(style='thin',color='00FF0000'), 
+                     right=Side(style='thin',color='00FF0000'), 
+                     top=Side(style='thin',color='00FF0000'), 
+                     bottom=Side(style='thin',color='00FF0000'))
+        print("gotHere")
+        if(pathFlag==True):
+            ws1.cell(row=index+2, column=7, value= "True")
+            ws1.cell(row=index+2, column=7).border = thin_border
+        else:
+            ws1.cell(row=index+2, column=7, value= "False")
+            
+        wb.save(self.system.dataFilePaths[self.system.currFileIndex])
+        
+        
         
     def reSizeCells(self, ws1):
         ws1.column_dimensions['A'].width= 15
