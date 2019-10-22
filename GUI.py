@@ -14,7 +14,7 @@ class GUI:
         _fgcolor = '#000000'  # X11 color: 'black'
         _compcolor = '#d9d9d9' # X11 color: 'gray85'
         _ana1color = '#d9d9d9' # X11 color: 'gray85'
-        _ana2color = '#ececec' # Closest X11 color: 'gray92'
+        _ana2color = '#ececec' # Closest X11 color: 'gray92
         font25 = "-family {Segoe UI} -size 25 -weight bold -slant roman "  \
             "-underline 0 -overstrike 0"
         font20 = "-family {Segoe UI} -size 20 -slant roman "  \
@@ -438,7 +438,7 @@ class GUI:
         self.ledPowerButton.configure(highlightbackground="#d9d9d9")
         self.ledPowerButton.configure(highlightcolor="black")
         self.ledPowerButton.configure(pady="0")
-        self.ledPowerButton.configure(text='''Power''')
+        self.ledPowerButton.configure(text='''On/Off''')
         self.ledPowerButton.configure(command= self.ledPower)
         self.ledPowerButton.configure(font=font20)
 
