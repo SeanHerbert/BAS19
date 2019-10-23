@@ -900,7 +900,8 @@ class GUI:
             r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the keypad on top
             caller = event.widget
             r.title("Keypad")
-            
+            r.overrideredirect(True)
+
             kp = KeyPad(r,self,caller)
             kp.grid()
     

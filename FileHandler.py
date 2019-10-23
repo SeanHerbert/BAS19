@@ -47,6 +47,7 @@ class FileHandler():
             r.geometry("400x150+1520+0")
             r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the keypad on top
             r.title("Save/Close")
+            r.overrideredirect(True)
             
             dfc = DataFileControl(r,self.system)
             dfc.grid()
