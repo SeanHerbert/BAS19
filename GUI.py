@@ -2,7 +2,6 @@ import tkinter as tk
 from System import System
 from PIL import ImageTk, Image
 from KeyPad import KeyPad
-from datetime import datetime
 
 
 class GUI:
@@ -14,13 +13,14 @@ class GUI:
         _fgcolor = '#000000'  # X11 color: 'black'
         _compcolor = '#d9d9d9' # X11 color: 'gray85'
         _ana1color = '#d9d9d9' # X11 color: 'gray85'
-        _ana2color = '#ececec' # Closest X11 color: 'gray92
+        _ana2color = '#ececec' # Closest X11 color: 'gray92'
         font25 = "-family {Segoe UI} -size 25 -weight bold -slant roman "  \
             "-underline 0 -overstrike 0"
         font20 = "-family {Segoe UI} -size 20 -slant roman "  \
             "-underline 0 -overstrike 0"
+        self.carouselZeroed = False
         self.root = tk.Tk()
-        self.root.geometry("1920x1060+-1+0")
+        self.root.geometry("1920x1060+-1+-2")
         self.root.title("Blood Analyzer")
         self.root.configure(background="#d9d9d9")
         
@@ -867,6 +867,8 @@ class GUI:
         
     def zeroCarousel(self):
         self.system.carousel.zeroPos()
+        self.carouselZeroed = True
+        self.goToSlideText.insert(tk.END, '0')
         try:
             self.sampleIdText.delete("1.0","end")
             self.sampleDateText.delete("1.0","end")

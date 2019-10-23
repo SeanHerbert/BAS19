@@ -35,14 +35,26 @@ class DataFileControl(Frame):
                                 command=self.save)
         self.btn_save.grid(row=1, column=0, sticky=W + E)
         self.btn_save.configure(width = 10)
-        self.btn_save.configure(height = 4)
+        self.btn_save.configure(height = 2)
 
 
         self.btn_close = Button(self, text="Close", font=self.FONT,
                                 command=self.close)
         self.btn_close.grid(row=1, column=1, sticky=W + E)
         self.btn_close.configure(width = 10)
-        self.btn_close.configure(height = 4)
+        self.btn_close.configure(height = 2)
+        
+        self.btn_scrollUp = Button(self, text = "Scroll Up", font=self.FONT,
+                                   command = self.scrollUp)
+        self.btn_scrollUp.grid(row=2, column=0, sticky=W + E)
+        self.btn_scrollUp.configure(width = 10)
+        self.btn_scrollUp.configure(height = 2)
+        
+        self.btn_scrollDwn = Button(self, text = "Scroll Down", font=self.FONT,
+                                   command = self.scrollDwn)
+        self.btn_scrollDwn.grid(row=2, column=1, sticky=W + E)
+        self.btn_scrollDwn.configure(width = 10)
+        self.btn_scrollDwn.configure(height = 2)
         
         
         
@@ -67,6 +79,15 @@ class DataFileControl(Frame):
         self.master.destroy()
         os.killpg(os.getpgid(self.proc1.pid), signal.SIGTERM)
         print("Closed")
+    
+    def scrollUp(self):
+        su = "xdotool search --name {} key Up Up Up Up Up Up Up Up".format(self.fname)
+        os.system(su)
+    
+    def scrollDwn(self):
+        sd = "xdotool search --name {} key Down Down Down Down Down Down Down Down".format(self.fname)
+        os.system(sd)
+        
 #         self.GUI.kpRunning =0
 # r = Tk()
 # r.geometry("400x120+1520+0")
