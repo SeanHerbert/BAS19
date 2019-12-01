@@ -60,8 +60,14 @@ class FileHandler():
         ws1.append(header)
         for i in range (20):
             ws1.cell(row=i+2, column=1, value=i)
-    def writeRatio(self,wb,ws1,index,ratio):
+    def writeRatio(self,wb,ws1,index,ratio,pathFlag):
+        thin_border = Border(left=Side(style='thick',color='00FF0000'), 
+                     right=Side(style='thick',color='00FF0000'), 
+                     top=Side(style='thick',color='00FF0000'), 
+                     bottom=Side(style='thick',color='00FF0000'))
         ws1.cell(row=index+2, column=6, value= ratio)
+        if(pathFlag == True):
+            ws1.cell(row=index+2, column=6).border = thin_border
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
         print("~~~~~~~~~~~~~~~~~~Ratio written~~~~~~~~~~~~~~~~")
 
@@ -124,29 +130,26 @@ class FileHandler():
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
         print("~~~~~~~~~~~~~~~~~~DateTime written~~~~~~~~~~~~~~~~")
     def writePathology(self,wb,ws1,index,pathFlag):
-        thin_border = Border(left=Side(style='thin',color='00FF0000'), 
-                     right=Side(style='thin',color='00FF0000'), 
-                     top=Side(style='thin',color='00FF0000'), 
-                     bottom=Side(style='thin',color='00FF0000'))
+        
         print("gotHere")
         if(pathFlag==True):
-            ws1.cell(row=index+2, column=7, value= "True")
-            ws1.cell(row=index+2, column=7).border = thin_border
+            ws1.cell(row=index+2, column=7, value= "Out of Range")
+            
         else:
-            ws1.cell(row=index+2, column=7, value= "False")
+            ws1.cell(row=index+2, column=7, value= "Normal")
             
         wb.save(self.system.dataFilePaths[self.system.currFileIndex])
         
         
         
     def reSizeCells(self, ws1):
-        ws1.column_dimensions['A'].width= 15
+        ws1.column_dimensions['A'].width= 13
         ws1.column_dimensions['B'].width= 10
         ws1.column_dimensions['C'].width= 12
         ws1.column_dimensions['D'].width= 14
         ws1.column_dimensions['E'].width= 14
         ws1.column_dimensions['F'].width= 14
-        ws1.column_dimensions['G'].width= 10
+        ws1.column_dimensions['G'].width= 12
 
     def centerText(self,ws1):
         for col in ws1.columns:

@@ -2,11 +2,22 @@ import tkinter as tk
 from System import System
 from PIL import ImageTk, Image
 from KeyPad import KeyPad
+import os
+from Camera import Camera
+from CamAdjustFrame import CamAdjustFrame
+from multiprocessing import Queue
+from queue import Empty
+from threading import Thread
+
 
 
 class GUI:
      
     def __init__(self):
+        
+        #used to set memory requirement for Camera 
+        os.system("sudo echo 0|sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb")
+
         '''This class configures and populates the toplevel window.
            self.root is the toplevel containing window.'''
         _bgcolor = '#d9d9d9'  # X11 color: 'gray85'
@@ -18,14 +29,30 @@ class GUI:
             "-underline 0 -overstrike 0"
         font20 = "-family {Segoe UI} -size 20 -slant roman "  \
             "-underline 0 -overstrike 0"
+        
+        self.system = System(self) #system object that stores all objects for al functionality (gets passed the GUI)
+        
+        self.queue = Queue()#queue used for processing instructions from threads for updating GUI etc.
+        
+        #carousel zeroed flag and counters and keypad flag 
         self.carouselZeroed = False
+        self.kpRunning = 0
+        
+        #counters to track whether button click opens or closes camera adjust window and on or off LED
+        self.camAdjustCnt=0
+        self.ledPowerCnt = 0
+        
+        
+        
+        
+        #top-level configuration(window position, Title, Background color)
         self.root = tk.Tk()
         self.root.geometry("1920x1060+-1+-2")
         self.root.title("Blood Analyzer")
         self.root.configure(background="#d9d9d9")
         
-        self.ledPowerCnt = 0
-        self.kpRunning = 0
+        
+        #configuration for health/ status frame which contains status (busy or ready) and camera temp (celsius)
         self.healthStatusFrame = tk.LabelFrame(self.root)
         self.healthStatusFrame.place(relx=0.006, rely=0.0, relheight=0.16
                 , relwidth=0.192)
@@ -48,10 +75,13 @@ class GUI:
         self.statusText.configure(selectbackground="#c4c4c4")
         self.statusText.configure(selectforeground="black")
         self.statusText.configure(wrap="word")
+        self.statusText.insert(tk.END,"Ready")
+        self.statusText.configure(highlightbackground="green")
+        self.statusText.configure(highlightthickness=6)
 
         self.camTempText = tk.Text(self.healthStatusFrame)
         self.camTempText.place(relx=0.064, rely=0.61, relheight=0.282
-                , relwidth=0.211, bordermode='ignore')
+                , relwidth=0.3, bordermode='ignore')
         self.camTempText.configure(background="white")
         self.camTempText.configure(font=font20)
         self.camTempText.configure(foreground="black")
@@ -63,7 +93,7 @@ class GUI:
         self.camTempText.configure(wrap="word")
 
         self.camTempLabel = tk.Label(self.healthStatusFrame)
-        self.camTempLabel.place(relx=0.32, rely=0.688, height=26, width=220
+        self.camTempLabel.place(relx=0.39, rely=0.688, height=26, width=210
                 , bordermode='ignore')
         self.camTempLabel.configure(font=font20)
 
@@ -72,6 +102,7 @@ class GUI:
         self.camTempLabel.configure(foreground="#000000")
         self.camTempLabel.configure(text='''Cam Temp (°C)''')
 
+        #configuration for the camera Frame which contains camera adjust button
         self.cameraFrame = tk.LabelFrame(self.root)
         self.cameraFrame.place(relx=0.202, rely=0.39, relheight=0.12
                 , relwidth=0.192)
@@ -97,7 +128,11 @@ class GUI:
         self.camAdjustButton.configure(pady="0")
         self.camAdjustButton.configure(text='''Camera Adjust''')
         self.camAdjustButton.configure(font=font20)
+        self.camAdjustButton.configure(command = self.camAdjust) #callback for adjust button is self.camAdjust()
 
+
+        #configuration for the Focus Frame which contains manual focus (+) (-) buttons, display for curPos, video button
+        # and auto focus button 
         self.focusFrame = tk.LabelFrame(self.root)
         self.focusFrame.place(relx=0.202, rely=0.0, relheight=0.391
                 , relwidth=0.192)
@@ -122,7 +157,7 @@ class GUI:
         self.minusStepFocusButton.configure(highlightcolor="black")
         self.minusStepFocusButton.configure(pady="0")
         self.minusStepFocusButton.configure(text='''Step(-)''')
-        self.minusStepFocusButton.configure(command= self.jogDwn);
+        self.minusStepFocusButton.configure(command= self.jogDwn)#callback for manual step(-) is self.jogDwn()
         self.minusStepFocusButton.configure(font=font20)
         
         
@@ -140,7 +175,7 @@ class GUI:
         self.plusStepFocusButton.configure(highlightcolor="black")
         self.plusStepFocusButton.configure(pady="0")
         self.plusStepFocusButton.configure(text='''Step(+)''')
-        self.plusStepFocusButton.configure(command= self.jogUp);
+        self.plusStepFocusButton.configure(command= self.jogUp)#callback for manual step(+) is self.jogUp()
         self.plusStepFocusButton.configure(font=font20)
 
 
@@ -185,9 +220,9 @@ class GUI:
         self.videoButton.configure(text='''Video''')
         self.videoButton.configure(font=font20)
         
-#         self.plusStepFocusButton.configure(command=lambda : self.turnOnVideo());
+        self.videoButton.configure(command=self.videoPower)#callback for video button is self.videoPower()
 
-
+ 
         self.autoFocusButton = tk.Button(self.focusFrame)
         self.autoFocusButton.place(relx=0.062, rely=0.743, height=64, width=300
                 , bordermode='ignore')
@@ -200,10 +235,10 @@ class GUI:
         self.autoFocusButton.configure(highlightcolor="black")
         self.autoFocusButton.configure(pady="0")
         self.autoFocusButton.configure(text='''Auto Focus''')
-        self.autoFocusButton.configure(command = self.autoFocus) #thread this and hook it to e-stop
+        self.autoFocusButton.configure(command = self.autoFocus) #threaded and hooked to e-stop
         self.autoFocusButton.configure(font=font20)
 
-
+        #configuration for manual frame which contains capture image button, analyze sample button, and save data button
         self.manualFrame = tk.LabelFrame(self.root)
         self.manualFrame.place(relx=0.396, rely=0.649, relheight=0.342
                 , relwidth=0.192)
@@ -229,7 +264,7 @@ class GUI:
         self.captureImageButton.configure(pady="0")
         self.captureImageButton.configure(text='''Capture image''')
         self.captureImageButton.configure(font=font20)
-#         self.captureImageButton.configure(command=lambda : self.getImage());
+        self.captureImageButton.configure(command=self.showIm)#callback for capture image button is self.showIm()
 
 
 
@@ -245,7 +280,7 @@ class GUI:
         self.analyzeSampleButton.configure(highlightcolor="black")
         self.analyzeSampleButton.configure(pady="0")
         self.analyzeSampleButton.configure(text='''Analyze sample''')
-        self.analyzeSampleButton.configure(command= self.countBlood) #thread this, maybe have a kill command?
+        self.analyzeSampleButton.configure(command= self.countBlood)#callback for Analyze sample button is self.countBlood()
         self.analyzeSampleButton.configure(font=font20)
 
         self.saveDataButton = tk.Button(self.manualFrame)
@@ -260,9 +295,11 @@ class GUI:
         self.saveDataButton.configure(highlightcolor="black")
         self.saveDataButton.configure(pady="0")
         self.saveDataButton.configure(text='''Save data''')
-        self.saveDataButton.configure(command = self.saveData)
+        self.saveDataButton.configure(command = self.saveData)#callback for Save data button is self.saveData()
         self.saveDataButton.configure(font=font20)
 
+
+        #configuration for utility frame which contains create file button, open file button, and set pathology interface
         self.utilityFrame = tk.LabelFrame(self.root)
         self.utilityFrame.place(relx=0.202, rely=0.515, relheight=0.47
                 , relwidth=0.192)
@@ -287,7 +324,7 @@ class GUI:
         self.createFileButton.configure(highlightcolor="black")
         self.createFileButton.configure(pady="0")
         self.createFileButton.configure(text='''Create file''')
-        self.createFileButton.configure(command= self.createFile)
+        self.createFileButton.configure(command= self.createFile)#callback for create file button is self.createFile()
         self.createFileButton.configure(font=font20)
 
 
@@ -303,7 +340,7 @@ class GUI:
         self.openFileButton.configure(highlightcolor="black")
         self.openFileButton.configure(pady="0")
         self.openFileButton.configure(text='''Open file''')
-        self.openFileButton.configure(command = self.openFile)
+        self.openFileButton.configure(command = self.openFile)#callback for open file button is self.openFile()
         self.openFileButton.configure(font=font20)
 
         self.setPathologyButton = tk.Button(self.utilityFrame)
@@ -318,7 +355,7 @@ class GUI:
         self.setPathologyButton.configure(highlightcolor="black")
         self.setPathologyButton.configure(pady="0")
         self.setPathologyButton.configure(text='''Set pathology''')
-        self.setPathologyButton.configure(command = self.setPathology)
+        self.setPathologyButton.configure(command = self.setPathology)#callback for set pathology button is self.setPathology()
         self.setPathologyButton.configure(font=font20)
 
         self.minPathologyText = tk.Text(self.utilityFrame)
@@ -333,7 +370,8 @@ class GUI:
         self.minPathologyText.configure(selectbackground="#c4c4c4")
         self.minPathologyText.configure(selectforeground="black")
         self.minPathologyText.configure(wrap="word")
-        self.minPathologyText.bind("<Button-1>",lambda e: self.genKeyPad(e))
+        self.minPathologyText.bind("<Button-1>",lambda e: self.genKeyPad(e))#callback for min patholgy text is self.genKeyPad(e)
+        
 
         self.maxPathologyText = tk.Text(self.utilityFrame)
         self.maxPathologyText.place(relx=0.528, rely=0.786, relheight=0.152
@@ -347,7 +385,7 @@ class GUI:
         self.maxPathologyText.configure(selectbackground="#c4c4c4")
         self.maxPathologyText.configure(selectforeground="black")
         self.maxPathologyText.configure(wrap="word")
-        self.maxPathologyText.bind("<Button-1>",lambda e: self.genKeyPad(e))
+        self.maxPathologyText.bind("<Button-1>",lambda e: self.genKeyPad(e))#callback for max patholgy text is self.genKeyPad(e)
 
         self.minPathologyLabel = tk.Label(self.utilityFrame)
         self.minPathologyLabel.place(relx=0.124, rely=0.714, height=25, width=70
@@ -371,6 +409,8 @@ class GUI:
         self.maxPathologyLabel.configure(text='''Max''')
         self.maxPathologyLabel.configure(font=font20)
 
+
+        #configuration for automatic frame which contains auto-start button and E-stop button
         self.automaticFrame = tk.LabelFrame(self.root)
         self.automaticFrame.place(relx=0.592, rely=0.649, relheight=0.342
                 , relwidth=0.192)
@@ -395,7 +435,7 @@ class GUI:
         self.autoStartButton.configure(highlightcolor="black")
         self.autoStartButton.configure(pady="0")
         self.autoStartButton.configure(text='''Start''')
-        self.autoStartButton.configure(command= self.autoStart)
+        self.autoStartButton.configure(command= self.autoStart)#callback for auto start buttton is self.autoStart()
         self.autoStartButton.configure(font=font20)
 
 
@@ -412,8 +452,10 @@ class GUI:
         self.emergencyStopButton.configure(highlightcolor="black")
         self.emergencyStopButton.configure(pady="0")
         self.emergencyStopButton.configure(text='''Emergency stop''')
-        self.emergencyStopButton.configure(command= self.eStop)
+        self.emergencyStopButton.configure(command= self.eStop)#callback for e-stop buttton is self.eStop()
 
+
+        #configuration for illuminator frame which contains input text boxes for RGB values, on/off button, and set button 
         self.illuminatorFrame = tk.LabelFrame(self.root)
         self.illuminatorFrame.place(relx=0.006, rely=0.159, relheight=0.483
                 , relwidth=0.192)
@@ -439,7 +481,7 @@ class GUI:
         self.ledPowerButton.configure(highlightcolor="black")
         self.ledPowerButton.configure(pady="0")
         self.ledPowerButton.configure(text='''On/Off''')
-        self.ledPowerButton.configure(command= self.ledPower)
+        self.ledPowerButton.configure(command= self.ledPower)#callback for led power buttton is self.ledPower()
         self.ledPowerButton.configure(font=font20)
 
 
@@ -455,7 +497,7 @@ class GUI:
         self.redLevelText.configure(selectbackground="#c4c4c4")
         self.redLevelText.configure(selectforeground="black")
         self.redLevelText.configure(wrap="word")
-        self.redLevelText.bind("<Button-1>",lambda e: self.genKeyPad(e))
+        self.redLevelText.bind("<Button-1>",lambda e: self.genKeyPad(e))#callback for red level text is self.genKeyPad(e)
 
         self.greenLevelText = tk.Text(self.illuminatorFrame)
         self.greenLevelText.place(relx=0.062, rely=0.463, relheight=0.139
@@ -469,7 +511,7 @@ class GUI:
         self.greenLevelText.configure(selectbackground="#c4c4c4")
         self.greenLevelText.configure(selectforeground="black")
         self.greenLevelText.configure(wrap="word")
-        self.greenLevelText.bind("<Button-1>",lambda e: self.genKeyPad(e))
+        self.greenLevelText.bind("<Button-1>",lambda e: self.genKeyPad(e))#callback for green level text is self.genKeyPad(e)
 
         self.blueLevelText = tk.Text(self.illuminatorFrame)
         self.blueLevelText.place(relx=0.062, rely=0.648, relheight=0.139
@@ -483,7 +525,7 @@ class GUI:
         self.blueLevelText.configure(selectbackground="#c4c4c4")
         self.blueLevelText.configure(selectforeground="black")
         self.blueLevelText.configure(wrap="word")
-        self.blueLevelText.bind("<Button-1>",lambda e: self.genKeyPad(e))
+        self.blueLevelText.bind("<Button-1>",lambda e: self.genKeyPad(e))#callback for blue level text is self.genKeyPad(e)
 
         self.ledSetButton = tk.Button(self.illuminatorFrame)
         self.ledSetButton.place(relx=0.062, rely=0.81, height=64, width=300
@@ -497,7 +539,7 @@ class GUI:
         self.ledSetButton.configure(highlightcolor="black")
         self.ledSetButton.configure(pady="0")
         self.ledSetButton.configure(text='''Set''')
-        self.ledSetButton.configure(command= self.setLed)
+        self.ledSetButton.configure(command= self.setLed)#callback for set led buttton is self.setLed()
         self.ledSetButton.configure(font=font20)
 
 
@@ -543,7 +585,8 @@ class GUI:
         self.blueLevelLabel.configure(text='''Blue(0-255)''')
         self.blueLevelLabel.configure(font=font20)
 
-
+        #configuration for carousel frame which contains manual step forward and backward buttons,
+        #zero carousel button, and go to slide interface
         self.carouselFrame = tk.LabelFrame(self.root)
         self.carouselFrame.place(relx=0.006, rely=0.64, relheight=0.3452
                 , relwidth=0.192)
@@ -568,7 +611,7 @@ class GUI:
         self.minusStepCarouselButton.configure(highlightcolor="black")
         self.minusStepCarouselButton.configure(pady="0")
         self.minusStepCarouselButton.configure(text='''Step(-)''')
-        self.minusStepCarouselButton.configure(command= self.cwStep)
+        self.minusStepCarouselButton.configure(command= self.cwStep)#callback for single step minus is self.cwStep()
         self.minusStepCarouselButton.configure(font=font20)
 
         self.plusStepCarouselButton = tk.Button(self.carouselFrame)
@@ -583,7 +626,7 @@ class GUI:
         self.plusStepCarouselButton.configure(highlightcolor="black")
         self.plusStepCarouselButton.configure(pady="0")
         self.plusStepCarouselButton.configure(text='''Step(+)''')
-        self.plusStepCarouselButton.configure(command= self.ccwStep)
+        self.plusStepCarouselButton.configure(command= self.ccwStep)#callback for single step plus is self.ccwStep()
         self.plusStepCarouselButton.configure(font=font20)
 
 
@@ -599,7 +642,7 @@ class GUI:
         self.zeroCarouselButton.configure(highlightcolor="#ffffff")
         self.zeroCarouselButton.configure(pady="0")
         self.zeroCarouselButton.configure(text='''Zero''')
-        self.zeroCarouselButton.configure(command= self.zeroCarousel)
+        self.zeroCarouselButton.configure(command= self.zeroCarousel)#callback for zero carousel button is self.zeroCarousel()
         self.zeroCarouselButton.configure(font=font20)
 
 
@@ -615,7 +658,7 @@ class GUI:
         self.goToSlideText.configure(selectbackground="#c4c4c4")
         self.goToSlideText.configure(selectforeground="black")
         self.goToSlideText.configure(wrap="word")
-        self.goToSlideText.bind("<Button-1>",lambda e: self.genKeyPad(e))
+        self.goToSlideText.bind("<Button-1>",lambda e: self.genKeyPad(e))#callback for go to slide text is self.genKeyPad(e)
 
 
         self.goToSlideButton = tk.Button(self.carouselFrame)
@@ -630,9 +673,11 @@ class GUI:
         self.goToSlideButton.configure(highlightcolor="black")
         self.goToSlideButton.configure(pady="0")
         self.goToSlideButton.configure(text='''Go to Slide''')
-        self.goToSlideButton.configure(command= self.goToSlide)
+        self.goToSlideButton.configure(command= self.goToSlide)#callback for go to slide button is self.goToSlide()
         self.goToSlideButton.configure(font=font20)
 
+
+        #configuration for sample parameters frame which contains sample id, sample data, wbc/rbc ratio and wbc/rbc counts 
         self.sampleParamsFrame = tk.LabelFrame(self.root)
         self.sampleParamsFrame.place(relx=0.787, rely=0.649, relheight=0.342
                 , relwidth=0.208)
@@ -670,15 +715,7 @@ class GUI:
         self.sampleDateText.configure(selectbackground="#c4c4c4")
         self.sampleDateText.configure(selectforeground="black")
         self.sampleDateText.configure(wrap="word")
-#         now = datetime.now()
-#         dt_string = now.strftime("%d/%m/%Y")
-#         temp= dt_string.split('/')
-#         if(temp[0][0]=='0'):
-#             temp[0] = temp[0][1:]
-#         temp[2] = temp[2][2:]
-#         print(temp)
-#         dt_string="{}/{}/{}".format(temp[0],temp[1],temp[2])
-#         self.sampleDateText.insert(tk.END,dt_string)
+
 
         self.sampleRatioText = tk.Text(self.sampleParamsFrame)
         self.sampleRatioText.place(relx=0.062, rely=0.523, relheight=0.157
@@ -761,91 +798,273 @@ class GUI:
         self.sampleBloodCountLabel.configure(text='''Counts''')
         self.sampleBloodCountLabel.configure(font=font20)
         
+        #configuration for image frame that contains the current image
         self.imageFrame = tk.LabelFrame(self.root)
         self.imageFrame.place(relx=0.3969, rely=0.006, relheight=0.638
                 , relwidth=0.600)
         self.imageFrame.configure(relief='groove')
         self.imageFrame.configure(borderwidth="0")
-#         self.imageFrame.configure(font=font25)
         self.imageFrame.configure(foreground="black")
-#         self.imageFrame.configure(text='''Slide Image''')
         self.imageFrame.configure(background="#d9d9d9")
         self.imageFrame.configure(highlightbackground="#d9d9d9")
         self.imageFrame.configure(highlightcolor="black")
 
-#         size = 1975.68,833.49
-#         self.path = "/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif"
-#         img = Image.open(self.path)
-#         img.thumbnail(size, Image.ANTIALIAS)
+        self.path = "xi_example.tiff"
+
         
-        self.img = ImageTk.PhotoImage(Image.open("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif"))
-#         self.img = ImageTk.PhotoImage(img)
+        self.img = ImageTk.PhotoImage(Image.open(self.path))
         self.panel = tk.Label(self.imageFrame,image=self.img)
+        self.panel.image = self.img
         self.panel.pack()
         
-        self.system = System(self)
         
+        
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%~~~~~~~~~~BEGIN CALLBACKS~~~~~~~~~~~~%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+# 1.)  CAMERA                                                                                                             #
+# 2.)  FOCUS                                                                                                              #
+# 3.)  ANALYZE BLOOD                                                                                                      #
+# 4.)  BORDER UPDATE                                                                                                      #
+# 5.)  DATAFILE                                                                                                           #
+# 6.)  AUTO START & E-STOP                                                                                                #
+# 7.)  LED                                                                                                                #
+# 8.)  CAROUSEL                                                                                                           #
+# 9.)  KEYPAD                                                                                                             #
+# 10.) RUN                                                                                                                #
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+
+        
+        
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ CAMERA FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+    #opens and closes cam adjust window based on parity of counter
+    def camAdjust(self):
+        if(self.camAdjustCnt %2 == 0):
+            self.system.cam.camAdjust()
+        else:
+            self.system.cam.camAdjustExit()
+        self.camAdjustCnt+=1
+        
+    #updates Cam Temp Reading every 6 secs   
+    def getCamTemp(self):
+        x = self.system.cam.getTemp()
+        x =str(round(x,2))
+        self.camTempText.delete("1.0","end")
+        self.camTempText.insert(tk.END,x)
+        self.root.after(6000,self.getCamTemp)
+    
+    #shows Image on GUI after capture image is pressed
+    def showIm(self):
+        
+        self.updateStatusText("Camera Busy")
+        self.updateStatusBorder("yellow")
+        self.system.busy = True
+        self.system.cam.showIm()
+        self.system.busy = False
+        self.system.GUI.updateStatusText()
+        self.system.GUI.updateStatusBorder()
+     
+    #prints camera aq status every 6 seconds (useful for debugging) 
+    def camAqStatus(self):
+        print(self.system.cam.getAqStatus())
+        self.root.after(6000,self.camAqStatus)
+        
+    #every 100ms checks if image needs to be updated and updates when necessary    
+    def updateImage(self):
+        if(self.system.imgChange==True):
+            self.newImg = ImageTk.PhotoImage(self.system.currImage)
+            self.panel.configure(image=self.newImg)
+            self.panel.image = self.newImg
+            self.panel.pack()
+            self.system.imgChange = False
+        self.root.after(100,self.updateImage)
+        
+    #starts new seperate thread for video calling system.control, which is for controlling threads
+    #thread runs in a infinite loop, checking parity of vidPowerCnt to determine when to turn on or off
+    #can be killed by e-stop(thread not killed,but video turned off)
+    def videoPower(self):
+        if(self.system.cam.vidPowerCnt %2 == 0):
+            
+            self.updateStatusText("Camera Busy")
+            self.updateStatusBorder("yellow")
+            self.system.busy = True
+            if(self.system.videoThreadStarted==False):
+                
+                self.system.control.combine('cam')
+
+        else:
+            self.system.busy = False
+            self.system.GUI.updateStatusText()
+            self.system.GUI.updateStatusBorder()
+        self.system.cam.vidPowerCnt +=1
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FOCUS FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+    #runs autofoucs routine in seperate thread, can be killed by e-stop
+    def autoFocus(self):
+        self.system.control.combine('focus')
+        
+
+    #manual single step down   
     def jogDwn(self):
         self.system.focus.jogDown()
         self.focusPosText.delete("1.0", "end")
         self.focusPosText.insert(tk.END,self.system.focus.zVar())
-       
+    
+    #manual single step up 
     def jogUp(self):
         self.system.focus.jogUp()
         self.focusPosText.delete("1.0", "end")
         self.focusPosText.insert(tk.END,self.system.focus.zVar())
         
-    def autoFocus(self):
-        self.system.focus.autoFocus()
-        self.focusPosText.delete("1.0", "end")
-        self.focusPosText.insert(tk.END,self.system.focus.zVar())
-    
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ANALYZE BLOOD FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+        
+        
+    #runs blood counting in seperate thread, cannot be killed by e-stop (but could easily be added)
     def countBlood(self):
-        #check to see if count Blood could successfully analyze the sample before writing to the GUI
-        if(self.system.man.countBlood() != None):
-            self.sampleBloodCountText.delete("1.0", "end")
-            self.sampleBloodCountText.insert(tk.END,"{}/{}".format(self.system.man.bloodData[0], self.system.man.bloodData[1]))
-            self.sampleRatioText.delete("1.0", "end")
-            self.sampleRatioText.insert(tk.END,self.system.man.bloodData[2]) #changed to get ratio from man instead of directly from BloodCounter object
-    
-    #added next two functions to remove/add pathology border. root.update() forces the GUI to redraw (fixed issue of not remoiving border at new analysis)
+        self.updateStatusText("Analyzing Blood")
+        self.updateStatusBorder("yellow")
+        self.system.busy = True
+        analyze = Thread(target = self.system.man.countBlood)
+        analyze.start()
+        
+
+    #sets pathology in utility class from user input into min and max pathology 
+    def setPathology(self):
+        self.system.util.setPathology(float(self.minPathologyText.get("1.0",tk.END)),float(self.maxPathologyText.get("1.0",tk.END)))
+ 
+ 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ BORDER UPDATE FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+ 
+ 
+    #added next two functions to remove/add pathology border. root.update()
+    #forces the GUI to redraw (fixed issue of not remoiving border at new analysis)
+    #root.update is dangerous and i'm not sure if its causing nested event loops
+    # should probably switch to root.after similar to camTemp function 
     def removePathologyBorder(self):
         self.sampleBloodCountText.delete("1.0", "end")
         self.sampleRatioText.delete("1.0", "end")
         self.sampleRatioText.configure(highlightthickness=0)
         self.root.update()
         
-    
+    #for setting red border on wbc/rbc ratio on GUI, same warning as above 
     def addPathologyBorder(self,ratio):
         if(self.system.util.pathologyWarn(ratio)):
             self.sampleRatioText.configure(highlightbackground="red")
-            self.sampleRatioText.configure(highlightthickness=4)
+            self.sampleRatioText.configure(highlightthickness=6)
             self.root.update()
+            
+   #for setting status border on GUI, same warning as above 
+    def updateStatusBorder(self,color="green"):
+        if(self.system.busy == True):
+            return
+        self.statusText.configure(highlightbackground=color)
+        self.statusText.configure(highlightthickness=6)
+        self.root.update()
         
+    def updateStatusText(self,display_text="Ready"):
+        if(self.system.busy == True):
+            return
+        
+        self.statusText.delete("1.0", "end")
+        self.statusText.insert(tk.END,display_text)
+        
+        
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DATA FILE FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#        
             
             
-    
+    #saves data from analysis, should be used right after analyze sample is pressed 
     def saveData(self):
         self.system.man.saveData()
-   
+    
+    #creates a dataFile
     def createFile(self):
         self.system.util.createFile()
-    
+        
+    #opens dataFile in Libre office
     def openFile(self):
         self.system.util.openCurrFile()
   
-    def setPathology(self):
-        self.system.util.setPathology(float(self.minPathologyText.get("1.0",tk.END)),float(self.maxPathologyText.get("1.0",tk.END)))
-    
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ AUTO START & E-STOP FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+    #start automatic mode in separate thread, can be killed by e-stop
     def autoStart(self):
         self.sampleBloodCountText.delete("1.0", "end")
         self.sampleRatioText.delete("1.0", "end")
         self.removePathologyBorder()
-        self.system.control.combine()
-    
+        self.system.control.combine('auto')
+        
+        
+    #kills threads, except video thread(in that case it just calls videoPower
     def eStop(self):
-        self.system.control.stop()
-      
+        cam =False
+        if(self.system.cam.vidPowerCnt %2 == 1):
+            cam = True
+        self.system.control.stop(cam)
+        
+        
+        
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LED FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+# should add a setBrightness function and modify GUI to support that function (lighting is very important for camera)    #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #turns led on and off based on parity of number of clicks (for some reason the first power on, it must be turned on, off, on to get it on)  
     def ledPower(self):
         if(self.ledPowerCnt % 2 == 0):
             self.system.illuminator.turnOn()
@@ -855,28 +1074,48 @@ class GUI:
         else:
             self.system.illuminator.turnOff()
         self.ledPowerCnt +=1
-        
+    
+    #changes LED color based on values input by user 
     def setLed(self):
         self.system.illuminator.changeColor(int(self.redLevelText.get("1.0",tk.END)),int(self.greenLevelText.get("1.0",tk.END)),int(self.blueLevelText.get("1.0",tk.END)))
-        
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ CAROUSEL FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+    #single step ccw
     def ccwStep(self):
         self.system.carousel.stepForward()
-        
+    
+    #single step cw
     def cwStep(self):
         self.system.carousel.stepBackward()
-        
+    
+    #zero carousel and show 0 for slide position, display sample date and ID in sample params frame if present in the datafile
     def zeroCarousel(self):
         self.system.carousel.zeroPos()
         self.carouselZeroed = True
+        self.goToSlideText.delete("1.0","end")
         self.goToSlideText.insert(tk.END, '0')
         try:
             self.sampleIdText.delete("1.0","end")
             self.sampleDateText.delete("1.0","end")
             self.sampleIdText.insert(tk.END,self.system.fileHandler.readSampleID())
             self.sampleDateText.insert(tk.END,self.system.fileHandler.readSampleDate())
+            
         except:
             print("Error: could not insert sampleID or sampleDate to GUI")
-        
+    
+    
+    #go to specified slide, update carousel position displayed on GUI, remove patholgy border if present, and display sample ID
+    #and Date if present in the datafile 
     def goToSlide(self):
         self.sampleBloodCountText.delete("1.0", "end")
         self.sampleRatioText.delete("1.0", "end")
@@ -884,8 +1123,7 @@ class GUI:
         self.system.carousel.moveToSlide(int(self.goToSlideText.get("1.0",tk.END)))
         
         
-        print("the curPos is {}".format(self.system.carousel.curPos))
-#         if(self.system.fileHandler.readSampleID()!= None):
+        print("the carousel curPos is {}".format(self.system.carousel.curPos))
         try:
             self.sampleIdText.delete("1.0","end")
             self.sampleDateText.delete("1.0","end")
@@ -893,21 +1131,95 @@ class GUI:
             self.sampleDateText.insert(tk.END,self.system.fileHandler.readSampleDate())
         except:
             print("Error: could not insert sampleID or sampleDate to GUI")
-    
+            
+            
+            
+            
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ KEYPAD FUNCTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #generates a keypad for user input knows which widget it was called from
     def genKeyPad(self,event):
         if(self.kpRunning==0):
             r = tk.Tk()
             r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the keypad on top
             caller = event.widget
+#             print(caller)
             r.title("Keypad")
-            r.overrideredirect(True)
+            r.overrideredirect(True) #disallows user exiting keypad with x button 
 
             kp = KeyPad(r,self,caller)
             kp.grid()
+            
+            
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ RUN FUNCTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#                                                                                                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     
     def run(self):
+        self.getCamTemp() #updates cam temp every 6 seconds
+        self.process_queue()#process Thread queue
+        self.updateImage()#updates current image displayed on GUI when necessary
+#         self.camAqStatus()
         self.root.mainloop()
         
+    #checks queue for data from different threads every 100 ms   
+    def process_queue(self):
+        if(not self.queue.empty()):
+            msg = self.queue.get(0)#get method returns and removes item. This is a FIFO queue
+#             print("what main loop sees in q :",msg)
+            
+            #message to set status to Ready
+            if(msg == 'setReady'):
+                self.system.busy = False
+                self.system.GUI.updateStatusText()
+                self.system.GUI.updateStatusBorder()
+             
+            #updates sample params and current slide position, as well as adds pathology border
+            #these data come from blood analysis thread or automatic thread
+            if(isinstance(msg,list)):
+                if(msg[0]== 'countblood'):
+                    self.system.busy = False
+                    self.system.GUI.updateStatusText()
+                    self.system.GUI.updateStatusBorder()
+                    
+#                 print("whole thing: ",msg)
+#                 print("~~~~~~~~~~~~~PARTS~~~~~~~")
+#                 print(msg[0])
+#                 print(msg[1])
+#                 print(msg[2])
+#                 print(msg[3])
+#                 print(msg[4])
+#                 print(msg[5])
+                    
+                self.sampleBloodCountText.delete("1.0", "end")
+                self.sampleBloodCountText.insert(tk.END,"{}/{}".format(msg[1],msg[2]))
+                self.sampleRatioText.delete("1.0", "end")    
+                self.sampleRatioText.insert(tk.END,"{}".format(msg[3]))
+                self.sampleIdText.delete("1.0", "end")
+                self.goToSlideText.delete("1.0","end")
+                self.goToSlideText.insert(tk.END,msg[5])
+                self.addPathologyBorder(msg[3])
+                
+            #mesage to remove pathology border    
+            if(msg == 'removePathBorder'):
+                print("removed path border")
+                self.removePathologyBorder()
+                
+                    
+        self.root.after(100, self.process_queue)# run inifinite loop (recursion)
+
+#start GUI
 app = GUI()
 app.run()
 

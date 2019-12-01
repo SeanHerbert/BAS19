@@ -17,34 +17,43 @@ try:
         #Motor1.Stop()
 #        c=carousel()
 #        c.moveToSlide(15)
-       c = carousel()
-       for x in range(0,5):
-           c.stepForward()
-           time.sleep(.5)
-       time.sleep(6)
-       for x in range(0,5):
-           c.stepBackward()
-           time.sleep(.5)
-       time.sleep(6)
-       for x in range(0,3):
-           c.nextSlide()
-           time.sleep(1.2)
-       time.sleep(6)
-       for x in range(0,3):
-           c.prevSlide()
-           time.sleep(1.2)
-       time.sleep(15)
+
+
+
+       c = carousel(3)
        
-       c.zeroPos()
-       c.moveToSlide(20)
-       time.sleep(.8)
-       c.moveToSlide(6)         #highlight and press alt 4
-       time.sleep(.8)
-       c.moveToSlide(11)
-       time.sleep(.8)
-       c.moveToSlide(7)
-       time.sleep(.8)
-       c.moveToSlide(1)
+       for i in range (200):
+           c.stepForward()
+           time.sleep(.1)
+       
+       
+#        for x in range(0,5):
+#            c.stepForward()
+#            time.sleep(.5)
+#        time.sleep(6)
+#        for x in range(0,5):
+#            c.stepBackward()
+#            time.sleep(.5)
+#        time.sleep(6)
+#        for x in range(0,3):
+#            c.nextSlide()
+#            time.sleep(1.2)
+#        time.sleep(6)
+#        for x in range(0,3):
+#            c.prevSlide()
+#            time.sleep(1.2)
+#        time.sleep(15)
+#        
+#        c.zeroPos()
+#        c.moveToSlide(20)
+#        time.sleep(.8)
+#        c.moveToSlide(6)         #highlight and press alt 4
+#        time.sleep(.8)
+#        c.moveToSlide(11)
+#        time.sleep(.8)
+#        c.moveToSlide(7)
+#        time.sleep(.8)
+#        c.moveToSlide(1)
         
         
     

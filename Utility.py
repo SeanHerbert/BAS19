@@ -3,8 +3,8 @@ from FileHandler import FileHandler
 class Utility():
     def __init__(self,system):
         self.system = system
-        self.minPathology = 0
-        self.maxPathology = 0
+        self.minPathology = -9999
+        self.maxPathology = 9999
         self.fileHandler = FileHandler(self)
     def setPathology(self, min, max):
         self.minPathology = min

@@ -3,10 +3,11 @@ io.setwarnings(False)
 
 class Illuminator(): # Define our class
     def __init__(self,data,clock,bright):
+        self.on = 0
         self.setBrightness(bright)
         self.da = data
         self.ck = clock
-        self.on = 0
+        
         io.setmode(io.BCM)
         io.setup(self.ck,io.OUT)
         io.setup(self.da,io.OUT)
@@ -20,6 +21,11 @@ class Illuminator(): # Define our class
         if brightness < 0:
             brightness = 0
         self.br = brightness | 0xE0
+        self.led=((self.br<<24)|(255<<16)|(255<<8)|255)
+        if(self.on):
+            self.show()
+        else:
+            self.prevConfig = self.led
 
     def turnOn(self):
         self.on = 1

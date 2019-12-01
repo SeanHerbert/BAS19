@@ -66,7 +66,7 @@ class KeyPad(Frame):
         self.btn_five.configure(width = 10)
         self.btn_five.configure(height = 5)
         self.btn_six = Button(self, text="6", font=self.FONT,
-                              command=lambda: self.digit("5"))
+                              command=lambda: self.digit("6"))
         self.btn_six.grid(row=2, column=2, sticky=W + E)
         self.btn_six.configure(width = 10)
         self.btn_six.configure(height = 5)
@@ -128,11 +128,23 @@ class KeyPad(Frame):
                 input=19
             if(input<0):
                 input =0
+        if "camadjustframe.!labelframe2" in str(self.caller):
+            input = int(input)
+            print("here")
+        if "camadjustframe.!labelframe3" in str(self.caller):
+            if(input>8):
+                input=19
+            if(input<0):
+                input =0
+            input = float(input)
+            
         self.caller.config(state=NORMAL)
         self.caller.delete("1.0", "end")
         self.caller.insert(END,input)
         self.destroy()
+        self.quit()
         self.master.destroy()
+        self.master.quit()
         self.GUI.kpRunning =0
 
  
