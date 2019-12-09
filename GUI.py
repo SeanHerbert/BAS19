@@ -881,6 +881,7 @@ class GUI:
     #every 100ms checks if image needs to be updated and updates when necessary    
     def updateImage(self):
         if(self.system.imgChange==True):
+#             self.newImg = ImageTk.PhotoImage(Image.open(self.path))    
             self.newImg = ImageTk.PhotoImage(self.system.currImage)
             self.panel.configure(image=self.newImg)
             self.panel.image = self.newImg
@@ -892,8 +893,9 @@ class GUI:
     #thread runs in a infinite loop, checking parity of vidPowerCnt to determine when to turn on or off
     #can be killed by e-stop(thread not killed,but video turned off)
     def videoPower(self):
-        if(self.system.cam.vidPowerCnt %2 == 0):
-            
+        self.system.cam.vidPowerCnt +=1
+        if(self.system.cam.vidPowerCnt %2 == 1):
+            self.system.cam.set_bg_black()
             self.updateStatusText("Camera Busy")
             self.updateStatusBorder("yellow")
             self.system.busy = True
@@ -902,10 +904,12 @@ class GUI:
                 self.system.control.combine('cam')
 
         else:
+            self.system.cam.showIm()
             self.system.busy = False
             self.system.GUI.updateStatusText()
             self.system.GUI.updateStatusBorder()
-        self.system.cam.vidPowerCnt +=1
+            self.system.cam.showIm()
+        
 
 
 
@@ -1104,6 +1108,7 @@ class GUI:
         self.carouselZeroed = True
         self.goToSlideText.delete("1.0","end")
         self.goToSlideText.insert(tk.END, '0')
+        
         try:
             self.sampleIdText.delete("1.0","end")
             self.sampleDateText.delete("1.0","end")
@@ -1146,6 +1151,7 @@ class GUI:
     #generates a keypad for user input knows which widget it was called from
     def genKeyPad(self,event):
         if(self.kpRunning==0):
+            self.system.cam.set_vals = True
             r = tk.Tk()
             r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the keypad on top
             caller = event.widget

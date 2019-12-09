@@ -1,37 +1,30 @@
 import cv2
 from DRV8825 import DRV8825
-# from imutils import paths
-from PIL import Image
-from os import walk
 import time
-from threading import Thread
-
-
-
 import numpy as np
-#import matplotlib.pyplot as plt
-#import dwt
-import requests
-import ssl
-import cv2
-import time
 
+
+#This class controls the Focus fram functionality. Including: autofocus,
+#manual single step down, manual single step up, and position tracking. Also includes laplacian variance fucntion 
 
 
 class Focus():
     
+    #constructor has motor object, commented out one is for other motor
     def __init__(self,system):
 #         self.motor = DRV8825(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20))
         self.motor = DRV8825(dir_pin=24, step_pin=18, enable_pin=4, mode_pins=(21, 22, 27))
         self.curPos = self.goToMax()
         self.system =system
     
+    #calculates the variance of the Laplacian for an image 
     def varianceofLap(self,image):
         return cv2.Laplacian(image,cv2.CV_64F).var()
 
+    #drives stepper motor to predefined upper limit set by limit switch 
     def goToMax(self):
         #moveToMax pos
-        #for testing without limit switches, we assuming it takes 2 steps(to preserve time) 
+        #for testing without limit switches, we assuming it takes 0 steps(to preserve time) 
         #the for loop will be replaced with the following while loop
         #while(!self.isAtTop()):
         for i in range(0):
@@ -49,26 +42,32 @@ class Focus():
     
     
     
-    
+    #autofocus routine: It assumes best focus is somewhere lower than curPos. It steps down in single step
+    #increments until it detects a decrease in variance, then it oscillates 3 times to make sure the drop
+    #was not a false positive
+    #with the current algorithm, the user must first manually focus the camera for autofocus to work
+    #autoFocus is called from a separate thread hence the presence of "not self.system.control.stop_threads.is_set()" checks 
     def autoFocus(self):
+        #counter and variance tracker
         loop = 0
         lt = 0
-#         p=0 # used for indexing thru roche images (for testing only)
+        
         if(self.system.control.stop_threads.is_set()):
             return -1
+        #makes sure small ROI is used(otherwise worstcase-> motors tend to jam up. bestcase->makes routine slower
         self.system.cam.resizeROI(400,300)
         self.system.cam.startAq()
+        
+        #drive motor up seven steps
         for i in range (7):
             self.jogUp()
-#             time.sleep(.1)
-#             print("jogged up ",i)
-#         return
+
 
         
         while(1 and (not self.system.control.stop_threads.is_set())):
             
             #let stepper settle from motor motion before getting image
-            time.sleep(1.3)
+            time.sleep(1.5)
             if(self.system.control.stop_threads.is_set()):
                 break
             image = self.system.cam.getImg()
@@ -77,43 +76,35 @@ class Focus():
             imageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             if(self.system.control.stop_threads.is_set()):
                 break
-            v = np.var(image)
-            print(v)
-#             self.system.cam.stopAq()
-#             return
+            v = np.var(image) # currently using numpy variance, can switch to cv2 if desired 
+            print("variance is: ",v)
+
             if(self.system.control.stop_threads.is_set()):
                 break
+
+            #if stepper motor has gone back up and down three times, return current image as best focused
             if(loop ==3):
                 if(self.system.control.stop_threads.is_set()):
                     break
-#                 self.system.currImage_analyze = image
-                self.system.cam.displayFocusedImage()
+                self.system.cam.displayFocusedImage()#display best image and set currImage_analyze
                 self.system.cam.stopAq()
 #                 print(("Best Variance is: ",v))
-                
-                 
                 return image
             
     
-            
+            #if current variance greater than previous variance keep moving closer
             if(v>lt):
                 lt =v
                 if(self.system.control.stop_threads.is_set()):
                     break
-#                 jd = Thread(target=self.jogDown)
-#                 jd.start()
                 self.jogDown()
-#                 time.sleep(1)
                 
-                
+            #if current variance is less than previous variance move away    
             else:
                 lt =v
                 if(self.system.control.stop_threads.is_set()):
                     break
-#                 ju = Thread(target=self.jogUp)
-#                 ju.start()
                 self.jogUp()
-#                 time.sleep(1)
                 loop +=1
         self.system.cam.stopAq()        
         return -1
@@ -121,80 +112,38 @@ class Focus():
  
  
  
- #uncomment the following configuration to achieve restore previous functionality
-                
-#     def autoFocus(self):
-#         loop = 0
-#         lt = 0
-# #         p=0 # used for indexing thru roche images (for testing only)
-#     
-#         while(1 and (not self.system.control.stop_threads.is_set())):
-# #             p+=1 # index thru folders of Roche images
-# #             for (_, _, ifn) in walk('/home/pi/BAS/Images/i'+str(p)):
-# #                 f=ifn
-# #             image = cv2.imread('/home/pi/BAS/Images/i'+str(p)+'/'+str(f[0])) #for test: image grabbed from roche images(will be from camera)
-#             image = self.system.cam.getImg()
-# #             cv2.imwrite('XiCAM example{}.tiff'.format(p), image)
-#             imageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#             v = self.varianceofLap(imageGray)
-#             print(v)
-# #             print("Variance at folder {} is {}".format(p,v))
-#             if(loop ==3):
-#                 #For now, just return image from folder (will be from camera)
-#                 self.system.currImage = image
-# #                 cv2.imshow("window", image)
-# #                 cv2.waitKey(0)
-# #                 cv2.destroyAllWindows()
-#                 #comment out the next 2 lines(used for testing consistency of wbc count with "good" slide image)
-# #                 image = cv2.imread("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif")
-# #                 self.system.currImage = image
-#                 return image
-#             
-#     
-#             
-#             if(v>lt):
-#                 lt =v
-#                 self.jogDown()
-#                 
-#             else:
-#                 lt =v
-#                 self.jogUp()
-#                 p-=2 # used to simulate grabbing the previous image (one jog up)
-#                 loop +=1
-#                 
-#         return -1
 
 
+    #track current position in um 
     def zVar(self):
         if(str(self.curPos) == "10000.0"):
             self.curPos = 10000
         return self.curPos
-        
+    
+    #move single step up
     def jogUp(self):
         #if(!selfisAtTop()):   //this will poll limit switch
-        self.motor.TurnStep(Dir='forward', steps=32, stepdelay = 0.000001) #steps = 32 is 1 step =6.5 um, steps = 4928 = 1mm
+        self.motor.TurnStep(Dir='forward', steps=32, stepdelay = 0.000001) #steps = 32 is 1 step =6.5 um (current setup), 1step =1um (final setup) 
         self.curPos +=1
         if(self.curPos>10000):
             self.curPos = 10000
         return
-#         print("jogged up")
-        #following two lines will be replaced by image grabbed from Camera
-#         self.system.currImage = cv2.imread("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif")
-#         return self.system.currImage
-        
 
+        
+    #move single step down
     def jogDown(self):
         #if(!isAtBottom()):   //this will poll limit switch
         self.motor.TurnStep(Dir='backward', steps=32, stepdelay = 0.000001)
         self.curPos -=1
         return
-        #following two lines will be replaced by image grabbed from Camera
-#         self.system.currImage = cv2.imread("/home/pi/BAS/Images/i12/10x Slide 520030762 in-focus height 64um.tif")
-#         return self.system.currImage
+        
 
         
 ###################################################### BEGIN RABBIT HOLE CODE (CAMBRIDGE AUTOFOCUS) #############################################################
-        
+
+#expiremental code taken from cambridge project -> https://2015.igem.org/Team:Cambridge-JIC/Autofocus
+#results were not very promising
+    
 #     def af(self,doIt):
 #         bas_system = self.system
 #         focus = self

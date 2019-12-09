@@ -1,96 +1,59 @@
 from FileHandler import FileHandler
-from tkinter import END
-import time
 
-from threading import Thread
-
-
+#This class runs automatic mode
+#It is called from a seperate thread, hence presence of "self.system.control.stop_threads.is_set()" checks 
 
 class Automatic():
+    
+    #constructor gets system object and filehandler 
     def __init__(self,system):
         self.system = system
         self.fileHandler = FileHandler(self)
         
-#     def analyze(self):
-#         x = self.system.bloodCounter.countWBC(self.bestImage)
-#         if(self.system.control.stop_threads.is_set()):
-#             return
-#         y = self.system.bloodCounter.countRBC(self.bestImage)
-#         if(self.system.control.stop_threads.is_set()):
-#             return
-#         z = self.system.bloodCounter.calcRatio()
-#         if(self.system.control.stop_threads.is_set()):
-#             return
-#         pathFlag = self.system.util.pathologyWarn(z)
-# #         dataArray = ['update_auto',x,y,z,pathFlag,i]
-# #         self.system.GUI.queue.put(dataArray)
-# #             print("Right after: ",self.system.GUI.queue.get(0))
-# #             time.sleep(5)
-#             
-#         self.fileHandler.writeRatio(self.system.control.wb,self.system.control.ws1,self.i, z, pathFlag)
-#         self.fileHandler.writeDateTime(self.system.control.wb,self.system.control.ws1,self.i)
-#         self.fileHandler.writePathology(self.system.control.wb,self.system.control.ws1,self.i,z)
-#         return
-        
+    #starts autofocus, runs autofocus, then analyzes, then writes results, then moves carousel
+    #does that 20 times in a for loop 
     def start(self):
-#         self.system.GUI.sampleBloodCountText.insert(END,"{}/{}".format(3,4))
-        
-            
+        import time
+        start_time = time.time()
         for i in range(20):
-            
             if(self.system.control.stop_threads.is_set()):
                 break
-                #auto focus
+            
+            #auto focus
             self.system.focus.autoFocus()
-                #analyze image
-            
             bestImage = self.system.currImage_analyze
-            
-            
-            print("best image found")
-            
-#             th = Thread(target = self.analyze)
-#             th.start()
-            
+#             print("best image found")
             
             if(self.system.control.stop_threads.is_set()):
                 break
-            x = self.system.bloodCounter.countWBC(bestImage)
+            
+            x = self.system.bloodCounter.countWBC(bestImage)#count WBC's
+            
+           
             if(self.system.control.stop_threads.is_set()):
                 break
-            y = self.system.bloodCounter.countRBC(bestImage)
+            y = self.system.bloodCounter.countRBC(bestImage)#count RBC's
             if(self.system.control.stop_threads.is_set()):
                 break
-            z = self.system.bloodCounter.calcRatio()
+            z = self.system.bloodCounter.calcRatio()#calc WBC:RBC ratio
             if(self.system.control.stop_threads.is_set()):
                 break
-            pathFlag = self.system.util.pathologyWarn(z)
+            pathFlag = self.system.util.pathologyWarn(z)#set pathology flage based on ratio
+            
+            #send data to main thread via shared queue
             dataArray = ['update_auto',x,y,z,pathFlag,i]
             self.system.GUI.queue.put(dataArray)
-#             print("Right after: ",self.system.GUI.queue.get(0))
-#             time.sleep(5)
-            
+
+            #write results to datafile
             self.fileHandler.writeRatio(self.system.control.wb,self.system.control.ws1,i, z, pathFlag)
             self.fileHandler.writeDateTime(self.system.control.wb,self.system.control.ws1,i)
             self.fileHandler.writePathology(self.system.control.wb,self.system.control.ws1,i,z)
             
-            
-            
-            
-#             print("contents of queue before data Insert",self.system.GUI.queue.get(0))
-            
-#             print("Array data put into the queue :",self.system.GUI.queue.get(0))
-#             self.system.GUI.sampleBloodCountText.delete("1.0", "end")
-#             self.system.GUI.sampleBloodCountText.insert(END,"{}/{}".format(x,y))
-#             self.system.GUI.sampleRatioText.delete("1.0", "end")    
-#             self.system.GUI.sampleRatioText.insert(END,"{}".format(z))
-#             self.system.GUI.sampleIdText.delete("1.0", "end")
-#             self.system.GUI.goToSlideText.delete("1.0","end")
-#             self.system.GUI.goToSlideText.insert(END,i)
-            
+            #move carousel to next slide
             self.system.carousel.nextSlide()
             print("moved carousel")
             print("===============================SLIDE {} COMPLETE========================".format(i))
+        print("--- %s seconds taken by auto ---" % (time.time() - start_time))
         return 'done'
 
     

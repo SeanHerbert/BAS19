@@ -14,15 +14,12 @@ class DataFileControl(Frame):
         
         """ initialize the frame """
         
-#         if(self.GUI.kpRunning==0):
-#             self.GUI.kpRunning=1
-#             print(self.GUI.kpRunning)
+        #stores current datafile name
         self.fname = system.dataFilePaths[system.currFileIndex][23:]
         self.master = master
         super(DataFileControl, self).__init__(master)
         self.grid()
             
-#             self.geometry("1920x1050+385+327")
         self.FONT = ("times bold", "20")
         self.create_buttons()
         self.proc1 = subprocess.Popen("florence",shell=True,preexec_fn=os.setsid)
@@ -30,7 +27,7 @@ class DataFileControl(Frame):
 
     def create_buttons(self):
 
-               # Create row 1 buttons
+        # Create row 1 buttons
         self.btn_save = Button(self, text="Save", font=self.FONT,
                                 command=self.save)
         self.btn_save.grid(row=1, column=0, sticky=W + E)
@@ -44,6 +41,8 @@ class DataFileControl(Frame):
         self.btn_close.configure(width = 10)
         self.btn_close.configure(height = 2)
         
+        
+        #create row 2 buttons
         self.btn_scrollUp = Button(self, text = "Scroll Up", font=self.FONT,
                                    command = self.scrollUp)
         self.btn_scrollUp.grid(row=2, column=0, sticky=W + E)
@@ -62,16 +61,16 @@ class DataFileControl(Frame):
         
        
 
-        # updates the buttons
+    # saves the file using command line 
     def save(self):
+        print("chslfjds")
+        print(self.fname)
         save = "xdotool search --name {} key ctrl+s".format(self.fname)
         os.system(save)
         print("Saved")
   
-   #kills window and inserts entered text into the widget that called from, also validates and bounds input
+   #closes Libre Office using command line 
     def close(self):
-        
-        
         close = "xdotool search --name {} key ctrl+q".format(self.fname)
         os.system(close)
         os.system("sudo pkill soffice.bin") 
@@ -79,24 +78,17 @@ class DataFileControl(Frame):
         self.master.destroy()
         os.killpg(os.getpgid(self.proc1.pid), signal.SIGTERM)
         print("Closed")
-    
+        
+    #scrolls up using command line 
     def scrollUp(self):
         su = "xdotool search --name {} key Up Up Up Up Up Up Up Up".format(self.fname)
         os.system(su)
     
+    #scrolls down using command line
     def scrollDwn(self):
         sd = "xdotool search --name {} key Down Down Down Down Down Down Down Down".format(self.fname)
         os.system(sd)
         
-#         self.GUI.kpRunning =0
-# r = Tk()
-# r.geometry("400x120+1520+0")
-# r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the keypad on top
-# r.title("Save/Close")
-#             
-# dfc = DataFileControl(r,self.system)
-# dfc.grid()
-# r.mainloop()
- 
+
 
 

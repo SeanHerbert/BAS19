@@ -20,17 +20,19 @@ class BloodCounter():
         #this method is called from threads, so it communicates to main thread via a shared queue object
         self.system.GUI.queue.put('removePathBorder')#tells main GUI thread to remove pathology border
         image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)#convert BGR to HSV
-        
+        image = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2BGR)
         #lower and upper bounds for color mask(in HSV)
-        lower_blue = np.array([102,60,218])
-        upper_blue = np.array([148,106,264])
+#         lower_blue = np.array([102,60,218])
+#         upper_blue = np.array([148,106,264])
+        lower_blue = np.array([200,130,150])
+        upper_blue = np.array([255,190,210])
         
-        mask = cv2.inRange(image_hsv, lower_blue, upper_blue)#mask is in HSV
+        mask = cv2.inRange(image, lower_blue, upper_blue)#mask is in HSV
         res = cv2.bitwise_and(image,image, mask= mask)#res is in BGR
         
         #dilates the detected WBC's to make distinguising between false positives and real WBC's easier 
         kernel_cell = np.ones((5,5),np.uint8)
-        res =cv2.dilate(res, kernel_cell, iterations = 2)
+#         res =cv2.dilate(res, kernel_cell, iterations = 3)
         
         #convert result to HSV and dislay saturation only to pass to removeSmallRegion 
         image_hsv = cv2.cvtColor(res, cv2.COLOR_BGR2HSV)
@@ -42,9 +44,11 @@ class BloodCounter():
     
     #removes false positives based on area
     def removeSmallRegion(self,image):
+        min = 9999999
+        max = -9999999
         removed = 0
         _,binary = cv2.threshold(image,0,255, cv2.THRESH_BINARY)
-        
+#         
         
         if (self.system.control.stop_threads.is_set()):
             return -1
@@ -53,11 +57,19 @@ class BloodCounter():
             if (self.system.control.stop_threads.is_set()):
                 return -1
             area = cv2.contourArea(contours[i])
-            if area < 100:
+            if(area >max):
+                max = area
+            if(area<min):
+                min = area
+            if area < 40:
                 removed+=1
-                cv2.drawContours(image,[contours[i]],0,0,-1)
-        
-        
+                cv2.drawContours(binary,[contours[i]],0,0,-1)
+#         print("~~~~~ITERATION {}~~~~~~~~~".format(k))
+        cv2.imwrite("debug/post_process.tif",binary)
+        print("min area is: ",min)
+        print("max area is: ",max)
+        print ("WBC count is: ", len(contours)-removed)
+#         return image
         return len(contours)-removed
 
 
@@ -91,10 +103,10 @@ class BloodCounter():
 #         cell_data = np.float32(cell_data)
 #         if (self.system.control.stop_threads.is_set()):
 #             return -1
-#         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 0.1)
+#         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)
 #         if (self.system.control.stop_threads.is_set()):
 #             return -1
-#         _,cell_label,cell_center=cv2.kmeans(cell_data,3,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
+#         _,cell_label,cell_center=cv2.kmeans(cell_data,3,None,criteria,1,cv2.KMEANS_RANDOM_CENTERS)
 #         if (self.system.control.stop_threads.is_set()):
 #             return -1
 #         cell_center = np.uint8(cell_center)
@@ -239,86 +251,86 @@ class BloodCounter():
 #         self.wbc_cnt = cell_num;
 # #         print("There are {} wbc's after remove double".format(cell_num))
 #         return self.wbc_cnt
-
-
-    #removes double counted WBC's using Intersection Over Union and K-nearest Neighbor (to use it, simply pass it the result from
-    #countWBC function)
-    def removeDouble(self,cell_num):
-        
-        record = []
-        tl_ = []
-        br_ = []
-        iou_ = []
-        iou_value = 0
-            
-        for i in range(cell_num):
-
-            if (self.system.control.stop_threads.is_set()):
-                return -1   
-            cnt = cnts[i]
-            if (self.system.control.stop_threads.is_set()):
-                return -1
-            x, y, w, h = cv2.boundingRect(cnt)
-            if (self.system.control.stop_threads.is_set()):
-                return -1
-            tl =(x,y)
-            if (self.system.control.stop_threads.is_set()):
-                return -1
-            br = (x+w,y+h)
-            if (self.system.control.stop_threads.is_set()):
-                return -1
-                     
-            
-            if record != []:
-                tree = spatial.cKDTree(record)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                index = tree.query(tl)[1]
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                center_x = int((tl[0] + br[0]) / 2)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                center_y = int((tl[1] + br[1]) / 2)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                radius = int((br[0] - tl[0]) / 2)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                center_x_knn = int((tl_[index][0] + br_[index][0]) / 2)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                center_y_knn = int((tl_[index][1] + br_[index][1]) / 2)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                radius_knn = int((br_[index][0] - tl_[index][0]) / 2)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                iou_value = iou(radius,radius_knn,center_x,center_y, center_x_knn,center_y_knn)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                iou_.append(iou_value)
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-            if iou_value > 0.02:
-                if (self.system.control.stop_threads.is_set()):
-                    return -1
-                cell_num = cell_num -1
-#                 print("~~~~~~~~~~~~~~~~~~~~~~~REMOVED~~~~~~~~~~~~~~~~~~~")
-                continue
-                     
-            record.append(tl)
-            if (self.system.control.stop_threads.is_set()):
-                return -1
-            tl_.append(tl)
-            if (self.system.control.stop_threads.is_set()):
-                return -1
-            br_.append(br)
-            if (self.system.control.stop_threads.is_set()):
-                return -1
-        self.wbc_cnt = cell_num;
-#         print("There are {} wbc's after remove double".format(cell_num))
-        return self.wbc_cnt
+# 
+# 
+#     #removes double counted WBC's using Intersection Over Union and K-nearest Neighbor (to use it, simply pass it the result from
+#     #countWBC function)
+#     def removeDouble(self,cell_num):
+#         
+#         record = []
+#         tl_ = []
+#         br_ = []
+#         iou_ = []
+#         iou_value = 0
+#             
+#         for i in range(cell_num):
+# 
+#             if (self.system.control.stop_threads.is_set()):
+#                 return -1   
+#             cnt = cnts[i]
+#             if (self.system.control.stop_threads.is_set()):
+#                 return -1
+#             x, y, w, h = cv2.boundingRect(cnt)
+#             if (self.system.control.stop_threads.is_set()):
+#                 return -1
+#             tl =(x,y)
+#             if (self.system.control.stop_threads.is_set()):
+#                 return -1
+#             br = (x+w,y+h)
+#             if (self.system.control.stop_threads.is_set()):
+#                 return -1
+#                      
+#             
+#             if record != []:
+#                 tree = spatial.cKDTree(record)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 index = tree.query(tl)[1]
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 center_x = int((tl[0] + br[0]) / 2)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 center_y = int((tl[1] + br[1]) / 2)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 radius = int((br[0] - tl[0]) / 2)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 center_x_knn = int((tl_[index][0] + br_[index][0]) / 2)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 center_y_knn = int((tl_[index][1] + br_[index][1]) / 2)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 radius_knn = int((br_[index][0] - tl_[index][0]) / 2)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 iou_value = iou(radius,radius_knn,center_x,center_y, center_x_knn,center_y_knn)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 iou_.append(iou_value)
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#             if iou_value > 0.02:
+#                 if (self.system.control.stop_threads.is_set()):
+#                     return -1
+#                 cell_num = cell_num -1
+# #                 print("~~~~~~~~~~~~~~~~~~~~~~~REMOVED~~~~~~~~~~~~~~~~~~~")
+#                 continue
+#                      
+#             record.append(tl)
+#             if (self.system.control.stop_threads.is_set()):
+#                 return -1
+#             tl_.append(tl)
+#             if (self.system.control.stop_threads.is_set()):
+#                 return -1
+#             br_.append(br)
+#             if (self.system.control.stop_threads.is_set()):
+#                 return -1
+#         self.wbc_cnt = cell_num;
+# #         print("There are {} wbc's after remove double".format(cell_num))
+#         return self.wbc_cnt
 
     #counts RBC's using Hough Transform (cv2.HoughCircles). 
     def countRBC(self,slideImage):

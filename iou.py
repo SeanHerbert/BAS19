@@ -1,5 +1,8 @@
 import math 
 
+#these functions are for removing double counts
+#intersection over union (iou) is used as a threshold value to determine if double count is present
+
 def calcDist(x1,y1,x2,y2):  
     dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)  
     return dist  

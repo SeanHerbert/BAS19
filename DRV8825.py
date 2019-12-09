@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
 import time
 
+#this class is for configuring and cotrolling the stepper motors 
+
 MotorDir = [
     'forward',
     'backward',
@@ -9,6 +11,7 @@ MotorDir = [
 
 
 class DRV8825():
+    
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins):
         self.dir_pin = dir_pin
         self.step_pin = step_pin        
@@ -33,11 +36,9 @@ class DRV8825():
         
     def TurnStep(self, Dir, steps, stepdelay=0.005):
         if (Dir == MotorDir[0]):
-#             print ("forward")
             self.digital_write(self.enable_pin, 0)
             self.digital_write(self.dir_pin, 0)
         elif (Dir == MotorDir[1]):
-#             print ("backward")
             self.digital_write(self.enable_pin, 0)
             self.digital_write(self.dir_pin, 1)
         else:
@@ -48,7 +49,6 @@ class DRV8825():
         if (steps == 0):
             return
             
-#         print ("turn step:",steps)
         for i in range(steps):
             self.digital_write(self.step_pin, True)
             time.sleep(stepdelay)

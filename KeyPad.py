@@ -1,7 +1,6 @@
-
-
 from tkinter import *
 
+#this class creates the number keypad for user input
 
 class KeyPad(Frame):
     """ GUI frame with a text box and keypad """
@@ -21,7 +20,6 @@ class KeyPad(Frame):
             super(KeyPad, self).__init__(master)
             self.grid()
             
-#             self.geometry("1920x1050+385+327")
             self.FONT = ("times bold", "20")
             self.current_digit = 0
             self.create_widgets()
@@ -102,12 +100,12 @@ class KeyPad(Frame):
         self.btn_enter.grid(row=5, column=0, columnspan=3, sticky=W + E)
         self.btn_enter.configure(height = 5)
 
-        # updates the buttons
 
+
+    # updates the buttons
     def digit(self, new_digit):
         self.prompt = self.txt_prompt.get(0.0, END).strip()
         self.current_digit = new_digit
-        
         self.update_box()
 
     # updates the text box with input from the buttons
@@ -146,6 +144,7 @@ class KeyPad(Frame):
         self.master.destroy()
         self.master.quit()
         self.GUI.kpRunning =0
+        self.GUI.system.cam.set_vals = False
 
  
 

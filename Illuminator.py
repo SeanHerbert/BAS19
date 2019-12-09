@@ -1,7 +1,10 @@
 import RPi.GPIO as io
 io.setwarnings(False)
 
+#This class controls the LED
+
 class Illuminator(): # Define our class
+    
     def __init__(self,data,clock,bright):
         self.on = 0
         self.setBrightness(bright)

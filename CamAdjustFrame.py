@@ -1,39 +1,36 @@
-
-
 from tkinter import *
-import os
-import subprocess
-import signal
-from ximea import xiapi
 
-
+#this class creates the camera adjust frame 
 
 class CamAdjustFrame(Frame):
-    """ GUI frame with a text box and keypad """
+    """ GUI frame for camera adjust interface """
 
     def __init__(self, master,system):
         
         """ initialize the frame """
         
-
         self.system = system
         self.master = master
+        self.kr = '{:5.2f}'.format(self.system.cam.get_kr())
+        self.kg = '{:5.2f}'.format(self.system.cam.get_kg())
+        self.kb = '{:5.2f}'.format(self.system.cam.get_kb())
+        self.exp = self.system.cam.get_exp()
+        self.sharp = '{:5.1f}'.format(self.system.cam.get_sharp())
         super(CamAdjustFrame, self).__init__(master)
         self.configure(background ="blue")
         self.pack()
-        self.autoWBCnt = 0    
+#         self.autoWBCnt = 0    
         self.FONT = "-family {Segoe UI} -size 25 -weight bold -slant roman "  \
             "-underline 0 -overstrike 0"
         self.font20 = "-family {Segoe UI} -size 20 -slant roman "  \
             "-underline 0 -overstrike 0"
         self.create_buttons()
         
+        
             
 
     def create_buttons(self):
         self.wbFrame = LabelFrame(self, width = 400, height =450)
-#         self.illuminatorFrame.place(relx=0.006, rely=0.159, relheight=0.483
-#                 , relwidth=0.192)
         self.wbFrame.configure(relief='groove')
         self.wbFrame.configure(borderwidth="8")
         self.wbFrame.configure(font=self.FONT)
@@ -57,10 +54,13 @@ class CamAdjustFrame(Frame):
         self.wbAutoButton.configure(highlightbackground="#d9d9d9")
         self.wbAutoButton.configure(highlightcolor="black")
         self.wbAutoButton.configure(pady="0")
-        self.wbAutoButton.configure(text='''Auto Balance''')
+        if(self.system.cam.is_auto_wb()):
+            t = '''Auto Off'''
+        else:
+            t = '''Auto On'''
+        self.wbAutoButton.configure(text=t)
         self.wbAutoButton.configure(command= self.toggleAutoWB)
         self.wbAutoButton.configure(font=self.font20)
-#         self.ledPowerButton.pack()
 
 
         self.redLevelText = Text(self.wbFrame)
@@ -76,6 +76,7 @@ class CamAdjustFrame(Frame):
         self.redLevelText.configure(selectforeground="black")
         self.redLevelText.configure(wrap="word")
         self.redLevelText.bind("<Button-1>",lambda e: self.system.GUI.genKeyPad(e))
+        self.redLevelText.insert(END,self.kr)
 
         self.greenLevelText = Text(self.wbFrame)
         self.greenLevelText.place(relx=0.062, rely=0.463, relheight=0.139
@@ -90,6 +91,7 @@ class CamAdjustFrame(Frame):
         self.greenLevelText.configure(selectforeground="black")
         self.greenLevelText.configure(wrap="word")
         self.greenLevelText.bind("<Button-1>",lambda e: self.system.GUI.genKeyPad(e))
+        self.greenLevelText.insert(END,self.kg)
 
         self.blueLevelText = Text(self.wbFrame)
         self.blueLevelText.place(relx=0.062, rely=0.648, relheight=0.139
@@ -104,6 +106,8 @@ class CamAdjustFrame(Frame):
         self.blueLevelText.configure(selectforeground="black")
         self.blueLevelText.configure(wrap="word")
         self.blueLevelText.bind("<Button-1>",lambda e: self.system.GUI.genKeyPad(e))
+        self.blueLevelText.insert(END,self.kb)
+        
 
         self.wbSetButton = Button(self.wbFrame)
         self.wbSetButton.place(relx=0.062, rely=0.81, height=64, width=300
@@ -166,7 +170,7 @@ class CamAdjustFrame(Frame):
         
         
         
-        self.exposureFrame = LabelFrame(self, width = 400, height =200)
+        self.exposureFrame = LabelFrame(self, width = 400, height =288)
         self.exposureFrame.place(relx=0.169, rely=0.159, relheight=0.483
                 , relwidth=0.192)
         self.exposureFrame.configure(relief='groove')
@@ -180,12 +184,29 @@ class CamAdjustFrame(Frame):
         self.exposureFrame.pack()
         
         
-        
+        self.AutoExposureButton = Button(self.exposureFrame)
+        self.AutoExposureButton.place(relx=0.062, y=42, height=64, width=300
+                , bordermode='ignore')
+        self.AutoExposureButton.configure(activebackground="#ececec")
+        self.AutoExposureButton.configure(activeforeground="#000000")
+        self.AutoExposureButton.configure(background="#b7b7b7")
+        self.AutoExposureButton.configure(disabledforeground="#a3a3a3")
+        self.AutoExposureButton.configure(foreground="#000000")
+        self.AutoExposureButton.configure(highlightbackground="#d9d9d9")
+        self.AutoExposureButton.configure(highlightcolor="black")
+        self.AutoExposureButton.configure(pady="0")
+        if(self.system.cam.is_ag()):
+            te = '''Auto Off'''
+        else:
+            te = '''Auto On'''
+        self.AutoExposureButton.configure(text=te)
+        self.AutoExposureButton.configure(command= self.toggle_ag)
+        self.AutoExposureButton.configure(font=self.font20)
         
         
         
         self.exposureLabel = Label(self.exposureFrame)
-        self.exposureLabel.place(relx=0.387, y= 60, height=26, width=175
+        self.exposureLabel.place(relx=0.387, y= 144, height=26, width=175
                 , bordermode='ignore')
         self.exposureLabel.configure(activebackground="#f9f9f9")
         self.exposureLabel.configure(activeforeground="black")
@@ -198,7 +219,7 @@ class CamAdjustFrame(Frame):
         self.exposureLabel.configure(font=self.font20)
         
         self.exposureText = Text(self.exposureFrame)
-        self.exposureText.place(relx=0.062, y=40, height=64
+        self.exposureText.place(relx=0.062, y=122, height=64
                 , relwidth=0.329, bordermode='ignore')
         self.exposureText.configure(background="white")
         self.exposureText.configure(font=self.font20)
@@ -210,9 +231,10 @@ class CamAdjustFrame(Frame):
         self.exposureText.configure(selectforeground="black")
         self.exposureText.configure(wrap="word")
         self.exposureText.bind("<Button-1>",lambda e: self.system.GUI.genKeyPad(e))
+        self.exposureText.insert(END,self.exp)
         
         self.exposureSetButton = Button(self.exposureFrame)
-        self.exposureSetButton.place(relx=0.062, y=120, height=64, width=300
+        self.exposureSetButton.place(relx=0.062, y=202, height=64, width=300
                 , bordermode='ignore')
         self.exposureSetButton.configure(activebackground="#ececec")
         self.exposureSetButton.configure(activeforeground="#000000")
@@ -222,7 +244,7 @@ class CamAdjustFrame(Frame):
         self.exposureSetButton.configure(highlightbackground="#d9d9d9")
         self.exposureSetButton.configure(highlightcolor="black")
         self.exposureSetButton.configure(pady="0")
-        self.exposureSetButton.configure(text='''Set''')
+        self.exposureSetButton.configure(text='''Manual Set''')
         self.exposureSetButton.configure(command= self.setExposure)
         self.exposureSetButton.configure(font=self.font20)
         
@@ -272,6 +294,7 @@ class CamAdjustFrame(Frame):
         self.sharpText.configure(selectforeground="black")
         self.sharpText.configure(wrap="word")
         self.sharpText.bind("<Button-1>",lambda e: self.system.GUI.genKeyPad(e))
+        self.sharpText.insert(END,self.sharp)
         
         self.sharpSetButton = Button(self.sharpFrame)
         self.sharpSetButton.place(relx=0.062, y=120, height=64, width=300
@@ -294,11 +317,14 @@ class CamAdjustFrame(Frame):
         
        
         
-    #kills window and inserts entered text into the widget that called from, also validates and bounds input
+    #sets exposure value from user input
     def setExposure(self):
+        if(self.system.cam.is_ag()):
+            self.exposureSetButton.configure(text='''Auto On''')
+            self.cam.diable_ag()
+            
         data = int(self.exposureText.get("1.0",END))
         self.system.cam.cam.set_exposure(data)
-#         self.system.cam.setAperture(data)
 
     def setSharp(self):
         data = float(self.sharpText.get("1.0",END))
@@ -306,14 +332,22 @@ class CamAdjustFrame(Frame):
         print(type(data))
         print("val of sharp is",data)
         self.system.cam.setSharp(data)
-        
+    
+    #turns auto white balance on and off based on parity of number of clicks 
     def toggleAutoWB(self):
-        if(self.autoWBCnt%2==0):
-            self.enableAutoWBalance()
-        else:
+        x = self.system.cam.is_auto_wb()
+        if(x):
             self.disableAutoWBalance()
-        self.autoWBCnt+=1
+            self.wbAutoButton.config(text = '''Auto On''')
         
+            
+        else:
+            self.enableAutoWBalance()
+            self.wbAutoButton.config(text = '''Auto Off''')
+            
+        
+    def toggle_ag(self):
+        self.system.cam.toggle_ag()
     
     def enableAutoWBalance(self):
         self.system.cam.enableAutoWB()
@@ -321,10 +355,34 @@ class CamAdjustFrame(Frame):
     def disableAutoWBalance(self):
         self.system.cam.disableAutoWB()
         self.system.cam.stopAq()
+        
+    def updateVals(self):
+        self.redLevelText.delete("1.0", "end")
+        self.greenLevelText.delete("1.0", "end")
+        self.blueLevelText.delete("1.0", "end")
+        self.exposureText.delete("1.0", "end")
+        self.sharpText.delete("1.0", "end")
+        r = self.system.cam.get_kr()
+        g = self.system.cam.get_kg()
+        b = self.system.cam.get_kb()
+        sharp = self.system.cam.get_sharp()
+        exp = self.system.cam.get_exp()
+        self.redLevelText.insert(END,r)
+        self.greenLevelText.insert(END,g)
+        self.blueLevelText.insert(END,b)
+        self.exposureText.insert(END,exp)
+        self.sharpText.insert(END,sharp)
+        
+        
+        
+        
        
     def setManualWBalance(self):
+        if(self.system.cam.is_auto_wb()):
+            self.wbAutoButton.config(text = '''Auto On''')
+            self.disableAutoWBalance()
         self.system.cam.setManWB(float(self.redLevelText.get("1.0",END)),float(self.greenLevelText.get("1.0",END)),float(self.blueLevelText.get("1.0",END)))
-       
+        
        
     def cafExit(self):
         self.destroy()

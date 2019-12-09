@@ -23,7 +23,8 @@ class Camera():
         
         #camera initial settings
         self.cam.set_imgdataformat('XI_RGB24')
-        self.cam.set_exposure(70000)
+        self.cam.set_aeag_level(71)
+        self.cam.enable_aeag()
         self.cam.set_height(900)
         self.cam.set_width(1200)
         self.cam.set_sharpness(4)#set to max sharp
@@ -31,6 +32,7 @@ class Camera():
         #flags and counters 
         self.vidClosed = True
         self.vidPowerCnt = 0
+        self.set_vals = False
     
     #returns temp in  Celcius 
     def getTemp(self):
@@ -39,6 +41,53 @@ class Camera():
     #set sharpness (-4 <= val =< 4)
     def setSharp(self,val):
         self.cam.set_sharpness(val)
+    
+    def is_auto_wb(self):
+        x = self.cam.is_auto_wb()
+        return x
+#         if('enab' in x):
+#             return True
+#         else:
+#             return False
+    def is_ag(self):
+        x = self.cam.is_aeag()
+        return x
+    
+    def get_kr(self):
+        return self.cam.get_wb_kr()
+    
+    def get_kg(self):
+        return self.cam.get_wb_kg()
+    
+    def get_kb(self):
+        return self.cam.get_wb_kb()
+    
+        
+    def get_exp(self):
+        return self.cam.get_exposure()
+    
+    def get_sharp(self):
+        return self.cam.get_sharpness() +4
+    
+    def disable_ag(self):
+        self.cam.disable_aeag()
+    
+    def toggle_ag(self):
+        if(self.cam.is_aeag()):
+            self.caf.AutoExposureButton.configure(text='''Auto On''')
+            self.stopAq()
+            self.cam.disable_aeag()
+            self.startAq()
+            self.cam.set_exposure(15000)
+            print("disabled")
+        else:
+            self.caf.AutoExposureButton.configure(text='''Auto Off''')
+            self.stopAq()
+            self.cam.set_aeag_level(71)
+            self.cam.enable_aeag()
+            self.startAq()
+            print("enabled")
+            
         
         
     
@@ -52,7 +101,7 @@ class Camera():
         img_analyze = img.get_image_data_numpy()
         self.system.currImage_analyze = img_analyze# image data for analysis is different than for display to GUI 
         img = img.get_image_data_numpy(invert_rgb_order=True)
-        img = PIL.Image.fromarray(img, 'RGB')
+        img = PIL.Image.fromarray(img).convert('RGB')
         self.system.currImage = img
         self.system.imgChange = True #change image flag set for GUI updateImage function 
         return img
@@ -103,28 +152,37 @@ class Camera():
 
         #stop communication
         self.cam.close_device()
-    
+        
+    def set_bg_black(self):
+        
+        img = np.zeros((700,1200))
+        
+        img = PIL.Image.fromarray(img,'RGB')
+        self.system.currImage = img
+        self.system.imgChange =True
     #captures image and displays to GUI 
     def showIm(self):
         self.resizeROI(1200,900)
         self.startAq()
         img = xiapi.Image()
-        self.cam.get_image(img)
+        self.cam.get_image(img,10000000)
         
         self.system.currImage_analyze = img.get_image_data_numpy()#for analysis 
 
         #create numpy array with data from camera. Dimensions of array are determined
         #by imgdataformat
         #NOTE: PIL takes RGB bytes in opposite order, so invert_rgb_order is True
+        
+        
+        
         img = img.get_image_data_numpy(invert_rgb_order=True)
         
+        img = PIL.Image.fromarray(img).convert('RGB')
+        img.save('thePic.tif')
         
-        
-        img = PIL.Image.fromarray(img, 'RGB')
         
         self.system.currImage = img
         self.system.imgChange =True
-        
         
 
         #Next 4 lines only for saving image with exposure value
@@ -161,7 +219,7 @@ class Camera():
                 #set camera settings here. height and width determine ROI size. Aquisition started in GUI function "startVideo()"
                 try:
                     self.stopAq()
-                    self.cam.set_exposure(70000)#this is a good value for current setup
+#                     self.cam.set_exposure(70000)#this is a good value for current setup
                     self.startAq()
                     self.resizeROI(400,300)#change back to small ROI if not already small
 
@@ -185,9 +243,9 @@ class Camera():
                 self.data = self.img.get_image_data_numpy()
                 
                 #calculate variance for image sharpness and display to frame
-#                 var = self.system.focus.varianceofLap(self.data) #can use this cv2.variance if wanted instead 
+                var = self.system.focus.varianceofLap(self.data) #can use this cv2.variance if wanted instead 
                
-                var =np.var(self.data) #using numpy variance currently 
+#                 var =np.var(self.data) #using numpy variance currently 
                 var = '{:5.2f}'.format(var)
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 
@@ -198,34 +256,38 @@ class Camera():
  
                 if(self.data is None):
                     print("no data")
-                cv2.imshow('XiCAM Video', self.data)
+                cv2.imshow('vid', self.data)
                 cv2.waitKey(20) #number of milliseconds frame is displayed 
                 
                 #position window and set it to stay on top    
-                cv2.moveWindow("XiCAM Video", 1400,200)
-                os.system("wmctrl -r 'XiCAM Video' -b add,above")
+                cv2.moveWindow("vid", 1400,200)
+                os.system("wmctrl -r 'vid' -b add,above")
                 
      
             #destroy window and stop camera acquisition, set vidClosed flage to True
             if (self.vidClosed == False):
                 self.vidClosed = True
                 
-                cv2.destroyWindow('XiCAM Video')
+                cv2.destroyWindow('vid')
         
                 self.stopAq()
 
     #generates the cam adjust window     
     def camAdjust(self):
-        r = Tk()
-        r.geometry("450x875+760+10")
-        r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the window on top
-        r.title("Cam Adjust")
-        r.configure(background = "blue")#used for contrasting background
-        r.overrideredirect(True) #remove minimize and exit toolbar from window
+        self.r = Tk()
+        self.r.geometry("450x965+760+10")
+        self.r.call('wm', 'attributes', '.', '-topmost', '1') #keeps the window on top
+        self.r.title("Cam Adjust")
+        self.r.configure(background = "blue")#used for contrasting background
+        self.r.overrideredirect(True) #remove minimize and exit toolbar from window
         
         #generate camera Adjust window    
-        self.caf = CamAdjustFrame(r,self.system)
-    
+        self.caf = CamAdjustFrame(self.r,self.system)
+#         self.updateCaf()
+    def updateCaf(self):
+        if(not self.set_vals):
+            self.caf.updateVals()
+        self.r.after(100,self.updateCaf)
     #closes window
     def camAdjustExit(self):
         self.caf.cafExit()
