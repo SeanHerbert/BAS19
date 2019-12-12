@@ -42,11 +42,15 @@ class Focus():
     
     
     
-    #autofocus routine: It assumes best focus is somewhere lower than curPos. It steps down in single step
-    #increments until it detects a decrease in variance, then it oscillates 3 times to make sure the drop
-    #was not a false positive
-    #with the current algorithm, the user must first manually focus the camera for autofocus to work
-    #autoFocus is called from a separate thread hence the presence of "not self.system.control.stop_threads.is_set()" checks 
+    #This autofocus routine needs a certain amount of variance present to work. 
+    #As long as cells are distinguishable, it should work (doesn't need to be totally in focus)
+    #This routine drives the stepper motor up seven steps
+    #Then it calculates the current variance at that position (variable vi)
+    #then in moves ones step down and calculates that variance (variable vf)
+    #if vf<vi a flag called "bestAbove" is set to True
+    #this flag is used to determine whether the stage jogs up or jogs down
+    #during the "hill-climbing phase"
+    #and which direction it moves during the oscillation sequence.
     def autoFocus(self):
         #counter and variance tracker
         loop = 0
@@ -61,6 +65,31 @@ class Focus():
         #drive motor up seven steps
         for i in range (7):
             self.jogUp()
+
+        #test for dir of best focus
+        image = self.system.cam.getImg()
+        if(self.system.control.stop_threads.is_set()):
+            break
+        imageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if(self.system.control.stop_threads.is_set()):
+            break
+        vi = np.var(image) # currently using numpy variance, can switch to cv2 if desired 
+
+        self.jogDown()
+        time.sleep(1.5)
+
+         image = self.system.cam.getImg()
+        if(self.system.control.stop_threads.is_set()):
+            break
+        imageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if(self.system.control.stop_threads.is_set()):
+            break
+        vf = np.var(image) # currently using numpy variance, can switch to cv2 if desired 
+
+        if(vf<vi):
+            self.bestAbove = True
+
+
 
 
         
@@ -95,16 +124,20 @@ class Focus():
             #if current variance greater than previous variance keep moving closer
             if(v>lt):
                 lt =v
-                if(self.system.control.stop_threads.is_set()):
-                    break
-                self.jogDown()
+            
+                if(self.bestAbove):
+                    self.jogUp()
+                else:
+                    self.jogDown()
                 
             #if current variance is less than previous variance move away    
             else:
                 lt =v
-                if(self.system.control.stop_threads.is_set()):
-                    break
-                self.jogUp()
+               
+                if(self.bestAbove):
+                    self.jogDown()
+                else:
+                    self.jogUp()
                 loop +=1
         self.system.cam.stopAq()        
         return -1
